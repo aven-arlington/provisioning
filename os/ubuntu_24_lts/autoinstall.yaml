@@ -75,10 +75,14 @@ autoinstall:
     - name: code
       classic: true
   packages:
-    - git
+    - ubuntu-advantage-tools
     - build-essential
+    - openssh-server
+    - gnupg2
+    - git
     - curl
     - dos2unix
+    - ripgrep
   timezone: America/Los_Angeles
   updates: all
   shutdown: reboot
@@ -89,6 +93,9 @@ autoinstall:
       printf "%s\n" "user_name variable: $user_name"
       echo "Defaults timestamp_timeout=60" | (EDITOR="tee -a" visudo -f /target/etc/sudoers.d/$user_name)
       echo "Defaults passwd_tries=3" | (EDITOR="tee -a" visudo -f /target/etc/sudoers.d/$user_name)
+      echo "# Disable ~/.sudo_as_admin_successful file" | (EDITOR="tee -a" visudo -f /target/etc/sudoers.d/$user_name)
+      echo "Defaults !admin_flag" | (EDITOR="tee -a" visudo -f /target/etc/sudoers.d/$user_name)
+      sed -i -e '/sudo hint/,+11 s/^/#/' /etc/bash.bashrc
       chmod 440 /target/etc/sudoers.d/$user_name
 
       echo "PermitRootLogin no" | tee -a /target/etc/ssh/sshd_config.d/$user_name.conf
@@ -103,11 +110,16 @@ autoinstall:
       #!/bin/sh
       printf "%s\n" "Post install instructions:" \\
       "GitHub -" \\
-      "Copy ssh keys with scp OR create new ones and verify functioning access" \\
+      "   Copy ssh keys with scp OR create new ones and verify functioning access with:" \\
+      "      ssh -T git@github.com" \\
+      "      git clone git@github.com:username/reponame.git" \\
       "Yubiko Keys -" \\
-      "With key inserted, run pamu2fcfg | tee -a ~/.config/u2f_keys" \\
-      "Repeat for backup key(s) with append pamu2fcfg -n | tee -a ~/.config/u2f_keys" \\
-      "Execute sudo /etc/post_install.sh"
+      "   With key inserted, run:" \\
+      "      pamu2fcfg | tee -a ~/.config/u2f_keys" \\
+      "   Repeat for backup key(s) with append flag: " \\
+      "      pamu2fcfg -n | tee -a ~/.config/u2f_keys" \\
+      "Execute -" \\
+      "   sudo /etc/post_install.sh" \\
       EOF
       chmod 755 /target/etc/update-motd.d/99-post-install
 
@@ -150,10 +162,10 @@ autoinstall:
       EOF
       chmod +x /target/etc/post_install.sh
     - sed -i 's/#WaylandEnable=false/WaylandEnable=true/g' /target/etc/gdm3/custom.conf
-    - curtin in-target -- curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -q -y
     - curtin in-target -- git config --system init.defaultBranch main
     - curtin in-target -- git config --system color.ui true
     - curtin in-target -- git config --system merge.conflictStyle zdiff3
+    - curtin in-target -- git config --system core.autocrlf input
     - curtin in-target -- git config --system core.editor "nvim"
     - curtin in-target -- git config --system user.name <name>
     - curtin in-target -- git config --system user.email <email>
