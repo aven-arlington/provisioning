@@ -8,6 +8,30 @@
       ansible.builtin.apt:
         update_cache: true
         upgrade: true
+    - name: system wide sudo configuration
+      template:
+        src: ./templates/sudoers.j2
+        dest: /etc/sudoers.d/{{ansible_user_id}}
+        owner: root
+        group: root
+        mode: '0600'
+        validate: /usr/sbin/visudo -cf %s
+      vars:
+        sudo_timestamp_timeout: 60
+        sudo_passwd_tries: 3
+    - name: system wide sshd configuration
+      template:
+        src: ./templates/sshd.conf.j2
+        dest: /etc/ssh/sshd_config.d/{{ansible_user_id}}.conf
+        owner: root
+        group: root
+        mode: '0600'
+        validate: /usr/sbin/sshd -t -f %s
+      vars:
+        sshd_permit_root_login: no
+        sshd_password_authentication: no
+        sshd_client_alive_interval: 60
+        sshd_client_alive_count_max: 60
     - name: install packages via apt
       ansible.builtin.apt:
         name: 
