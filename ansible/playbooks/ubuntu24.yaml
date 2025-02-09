@@ -32,11 +32,21 @@
         sshd_password_authentication: "no"
         sshd_client_alive_interval: 60
         sshd_client_alive_count_max: 60
+    - name: remove sudo hint from bashrc
+      ansible.builtin.command: sed -i -e '/sudo hint/,+11 s/^/#/' /target/etc/bash.bashrc
+    - name: remove the legal text from motd
+      ansible.builtin.command: rm /target/etc/legal
+    - name: turn off help text in motd
+      ansible.builtin.command: chmod -x /target/etc/update-motd.d/10-help-text
+    - name: add yubikey ppa
+      ansible.builtin.command: add-apt-repository -y ppa:yubico/stable && apt-get update
     - name: install packages via apt
       ansible.builtin.apt:
         name: 
           - ubuntu-advantage-tools
           - build-essential
+          - libpam-u2f 
+          - yubikey-manager
           - openssh-server
           - git
           - curl
@@ -83,3 +93,8 @@
           - numpy
           - pandas
           - bokeh
+    - name: install yubikey setup script
+      template:
+        src: ../templates/yubikey_setup.j2
+        dest: /home/{{ansible_user_id}}/yubikey_setup.sh
+        mode: '0744'
