@@ -1,0 +1,35 @@
+# Ansible playbook for a standard Ubuntu 24.04 development machine
+- hosts: "*"
+  become: yes
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - name: apt update and upgrade
+      apt:
+        update_cache: yes
+        upgrade: yes
+    - name: install python-venv
+      apt:
+        name: python3-venv
+- hosts: "*"
+  become: no
+  vars:
+    ansible_python_interpreter: /usr/bin/python3
+  tasks:
+    - name: install common python modules
+      pip:
+        virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
+        virtualenv: "/home/{{ansible_user_id}}/.venv"
+        name:
+          - poetry
+          - flake9
+          - black
+          - pytest
+          - ruff
+          - mkdocs
+          - requests
+          - matplotlib
+          - numpy
+          - pandas
+          - bokeh
+
