@@ -53,6 +53,15 @@
           - python3-venv
           - dos2unix
           - ripgrep
+          - ninja-build
+          - gettext 
+          - cmake
+          - g++ 
+          - pkg-config
+          - libfreetype6-dev
+          - libfontconfig1-dev
+          - libxcb-xfixes0-dev
+          - libxkbcommon-dev
 - name: Steps that do NOT require elevation
   hosts: ubuntu
   become: false
@@ -98,3 +107,25 @@
         src: ../templates/yubikey_setup.j2
         dest: /home/{{ansible_user_id}}/yubikey_setup.sh
         mode: '0744'
+    - name: create generic folder structure
+      ansible.builtin.command: mkdir -p /home/{{ansible_user_id}}/repos/{public_gh,private_gh,projects,sandboxes/{rust,cpp,leetcode},third_party}
+    - name: clone neovim
+      ansible.builtin.git:
+        repo: https://github.com/neovim/neovim.git
+        dest: /home/{{ansible_user_id}}/repos/third_party/
+        single_branch: yes
+        version: stable
+    - name: get latest release tag from alacritty repository
+      ansible.builtin.command: >
+        git -c 'versionsort.suffix=-' 
+        ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/alacritty/alacritty.git '*.*.*' 
+        | tail --lines=1 
+        | cut --delimiter='/' --fields=3
+      capture_output: yes
+      register: alacritty_stable
+    - name: clone alacritty
+      ansible.builtin.git:
+        repo: https://github.com/alacritty/alacritty.git
+        dest: /home/{{ansible_user_id}}/repos/third_party/
+        single_branch: yes
+        version: "{{ alacritty_stable.stdout }}"
