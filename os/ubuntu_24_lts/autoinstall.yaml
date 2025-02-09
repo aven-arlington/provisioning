@@ -74,6 +74,8 @@ autoinstall:
       classic: true
     - name: code
       classic: true
+    - name: tree
+      classic: true
   packages:
     - ubuntu-advantage-tools
     - build-essential
@@ -95,7 +97,7 @@ autoinstall:
       echo "Defaults passwd_tries=3" | (EDITOR="tee -a" visudo -f /target/etc/sudoers.d/$user_name)
       echo "# Disable ~/.sudo_as_admin_successful file" | (EDITOR="tee -a" visudo -f /target/etc/sudoers.d/$user_name)
       echo "Defaults !admin_flag" | (EDITOR="tee -a" visudo -f /target/etc/sudoers.d/$user_name)
-      sed -i -e '/sudo hint/,+11 s/^/#/' /etc/bash.bashrc
+      sed -i -e '/sudo hint/,+11 s/^/#/' /target/etc/bash.bashrc
       chmod 440 /target/etc/sudoers.d/$user_name
 
       echo "PermitRootLogin no" | tee -a /target/etc/ssh/sshd_config.d/$user_name.conf
@@ -112,7 +114,6 @@ autoinstall:
       "GitHub -" \\
       "   Copy ssh keys with scp OR create new ones and verify functioning access with:" \\
       "      ssh -T git@github.com" \\
-      "      git clone git@github.com:username/reponame.git" \\
       "Yubiko Keys -" \\
       "   With key inserted, run:" \\
       "      pamu2fcfg | tee -a ~/.config/u2f_keys" \\
@@ -170,7 +171,7 @@ autoinstall:
     - curtin in-target -- git config --system user.name <name>
     - curtin in-target -- git config --system user.email <email>
     - curtin in-target -- add-apt-repository -y ppa:yubico/stable && apt-get update
-    - curtin in-target -- apt-get install -y libpam-u2f
+    - curtin in-target -- apt-get install -y libpam-u2f yubikey-manager
   reporting:
     builtin:
       type: print
