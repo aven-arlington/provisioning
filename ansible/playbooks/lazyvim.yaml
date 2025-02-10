@@ -1,0 +1,46 @@
+- name: Install Lazyvim
+  hosts: ubuntu
+  gather_facts: true
+  tasks:
+    - name: clone lazyvim
+      ansible.builtin.git:
+        repo: https://github.com/LazyVim/starter
+        dest: ~/.config/nvim
+        single_branch: yes
+        version: main
+    - name: update lazyvim keybindings
+      ansible.builtin.blockinfile:
+        path: ~/.config/nvim/lua/config/keymaps.lua
+        append_newline: true
+        prepend_newline: true
+        block: |
+          -- Remap extra keys to exit insert mode
+          vim.keymap.set("i", "jk", "<Esc>", {})
+          vim.keymap.set("i", "kj", "<Esc>", {})
+
+          -- Prevent Q from being sent if capslock is on
+          vim.keymap.set("n", "Q", "<nop>")
+
+          -- Half-page jumping with centered cursor
+          vim.keymap.set("n", "<C-d>", "<C-d>zz")
+          vim.keymap.set("n", "<C-u>", "<C-u>zz")
+    - name: enable rust lazyvim
+      ansible.builtin.lineinfile:
+        path: ~/.config/nvim/lua/config/lazy.lua
+        insertafter: "^[ \t]+-- import\/override with your plugins"
+        line: '    { import = "lazyvim.plugins.extras.lang.rust" },'
+    - name: update lazyvim options
+      ansible.builtin.blockinfile:
+        path: ~/.config/nvim/lua/config/options.lua
+        append_newline: true
+        prepend_newline: true
+        block: |
+          vim.g.loaded_perl_provider = 0
+          vim.g.loaded_ruby_provider = 0
+    - name: config nvim/lazyvim
+      template: src={{item.src}} dest={{item.dest}}
+      with_items:
+        - {
+            src: templates/nvim/alacritty.j2,
+            dest: ~/.config/nvim/alacritty.toml,
+          }
