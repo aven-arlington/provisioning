@@ -35,9 +35,9 @@
     - name: remove sudo hint from bashrc
       ansible.builtin.command: sed -i -e '/sudo hint/,+11 s/^/#/' /etc/bash.bashrc
     - name: remove the legal text from motd
-      ansible.builtin.command: rm /target/etc/legal
+      ansible.builtin.command: rm /etc/legal
     - name: turn off help text in motd
-      ansible.builtin.command: chmod -x /target/etc/update-motd.d/10-help-text
+      ansible.builtin.command: chmod -x /etc/update-motd.d/10-help-text
     - name: add yubikey ppa
       ansible.builtin.command: add-apt-repository -y ppa:yubico/stable && apt-get update
     - name: install packages via apt
