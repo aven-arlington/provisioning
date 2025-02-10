@@ -38,8 +38,12 @@
       ansible.builtin.command: rm /etc/legal
     - name: turn off help text in motd
       ansible.builtin.command: chmod -x /etc/update-motd.d/10-help-text
-    - name: add yubikey ppa
-      ansible.builtin.command: add-apt-repository -y ppa:yubico/stable && apt-get update
+    - name: add yubico ppa
+      ansible.builtin.apt_repository:
+        repo: ppa:yubico/stable
+    - name: update apt cache
+      ansible.builtin.apt:
+        update_cache: true
     - name: install packages via apt
       ansible.builtin.apt:
         name: 
