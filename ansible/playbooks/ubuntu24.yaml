@@ -74,6 +74,8 @@
           - libfontconfig1-dev
           - libxcb-xfixes0-dev
           - libxkbcommon-dev
+          - gzip
+          - scdoc
 - name: Steps that do NOT require elevation
   hosts: ubuntu
   become: false
@@ -140,6 +142,11 @@
         dest: ~/repos/third_party/neovim
         single_branch: yes
         version: stable
+    - name: build neovim release
+      community.general.make:
+        chdir: ~/repos/third_party/neovim
+        params:
+          CMAKE_BUILD_TYPE: Release
     - name: get latest release tag from alacritty repository
       ansible.builtin.shell: >
         git -c 'versionsort.suffix=-' 
@@ -153,3 +160,22 @@
         dest: ~/repos/third_party/alacritty
         single_branch: yes
         version: "{{ alacritty_stable.stdout }}"
+    - name: alacritty completions
+      ansible.builtin.shell: >
+        mkdir -p ~/.bash_completion
+        cp ~/repos/third_party/alacritty/extra/completions/alacritty.bash ~/.bash_completion/alacritty
+        echo "source ~/.bash_completion/alacritty" >> ~/.bashrc
+- name: Post build installation
+  hosts: ubuntu
+  become: true
+  tasks:
+    - name: make install neovim
+      community.general.make:
+        chdir: ~/repos/third_party/neovim
+        target: install
+      become: true
+    - name: install alacritty
+      community.general.cargo:
+        name: alacritty
+        path: /usr/local
+        directory: ~/repos/third_party/alacritty
