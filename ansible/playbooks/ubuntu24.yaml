@@ -33,7 +33,7 @@
         sshd_client_alive_interval: 60
         sshd_client_alive_count_max: 60
     - name: remove sudo hint from bashrc
-      ansible.builtin.command: sed -i -e '/sudo hint/,+11 s/^/#/' /target/etc/bash.bashrc
+      ansible.builtin.command: sed -i -e '/sudo hint/,+11 s/^/#/' /etc/bash.bashrc
     - name: remove the legal text from motd
       ansible.builtin.command: rm /target/etc/legal
     - name: turn off help text in motd
