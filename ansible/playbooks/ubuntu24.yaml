@@ -173,6 +173,7 @@
       community.general.make:
         chdir: ~/repos/third_party/neovim
         target: install
+        file: ~/repos/third_party/neovim/Makefile
       become: true
     - name: install alacritty
       community.general.cargo:
