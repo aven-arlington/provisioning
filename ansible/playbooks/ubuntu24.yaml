@@ -176,9 +176,26 @@
         target: install
         file: "{{home}}/repos/third_party/neovim/Makefile"
       become: true
+    - name: build alacritty
+      ansible.builtin.shell: |
+        source ~/.cargo/env
+        cd {{home}}/repos/third_party/alacritty
+        cargo build --release
+      args:
+        executable: /bin/bash
     - name: install alacritty
-      community.general.cargo:
-        name: alacritty
-        path: /usr/local
-        directory: "{{home}}/repos/third_party/alacritty"
+      ansible.builtin.shell: |
+        cd {{home}}/repos/third_party/alacritty
+        cp target/release/alacritty /usr/local/bin # or anywhere else in $PATH
+        cp extra/logo/alacritty-term.svg /usr/share/pixmaps/Alacritty.svg
+        desktop-file-install extra/linux/Alacritty.desktop
+        update-desktop-database
+        mkdir -p /usr/local/share/man/man1
+        mkdir -p /usr/local/share/man/man5
+        scdoc < extra/man/alacritty.1.scd | gzip -c | tee /usr/local/share/man/man1/alacritty.1.gz > /dev/null
+        scdoc < extra/man/alacritty-msg.1.scd | gzip -c | tee /usr/local/share/man/man1/alacritty-msg.1.gz > /dev/null
+        scdoc < extra/man/alacritty.5.scd | gzip -c | tee /usr/local/share/man/man5/alacritty.5.gz > /dev/null
+        scdoc < extra/man/alacritty-bindings.5.scd | gzip -c | tee /usr/local/share/man/man5/alacritty-bindings.5.gz > /dev/null
       become: true
+      args:
+        executable: /bin/bash
