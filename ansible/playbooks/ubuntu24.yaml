@@ -121,7 +121,6 @@
         ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/alacritty/alacritty.git '*.*.*' 
         | tail --lines=1 
         | cut --delimiter='/' --fields=3
-      capture_output: yes
       register: alacritty_stable
     - name: clone alacritty
       ansible.builtin.git:
