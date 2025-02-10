@@ -161,7 +161,7 @@
         single_branch: yes
         version: "{{ alacritty_stable.stdout }}"
     - name: alacritty completions
-      ansible.builtin.shell: >
+      ansible.builtin.shell: |
         mkdir -p ~/.bash_completion
         cp ~/repos/third_party/alacritty/extra/completions/alacritty.bash ~/.bash_completion/alacritty
         echo "source ~/.bash_completion/alacritty" >> ~/.bashrc
