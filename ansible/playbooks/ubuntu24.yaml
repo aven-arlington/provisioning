@@ -34,6 +34,10 @@
         sshd_client_alive_count_max: 60
     - name: remove sudo hint from bashrc
       ansible.builtin.command: sed -i -e '/sudo hint/,+11 s/^/#/' /etc/bash.bashrc
+    - name: remove .sudo_as_admin_successful
+      ansible.builtin.file:
+        path: ~/.sudo_as_admin_successful
+        state: absent
     - name: remove the legal quips from motd
       ansible.builtin.file:
         path: /etc/legal
@@ -133,7 +137,7 @@
     - name: clone neovim
       ansible.builtin.git:
         repo: https://github.com/neovim/neovim.git
-        dest: /home/{{ansible_user_id}}/repos/third_party/
+        dest: /home/{{ansible_user_id}}/repos/third_party/neovim
         single_branch: yes
         version: stable
     - name: get latest release tag from alacritty repository
@@ -146,6 +150,6 @@
     - name: clone alacritty
       ansible.builtin.git:
         repo: https://github.com/alacritty/alacritty.git
-        dest: /home/{{ansible_user_id}}/repos/third_party/
+        dest: /home/{{ansible_user_id}}/repos/third_party/alacritty
         single_branch: yes
         version: "{{ alacritty_stable.stdout }}"
