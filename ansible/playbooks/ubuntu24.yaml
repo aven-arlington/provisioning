@@ -240,21 +240,14 @@
         - erdtree
     - name: config alacritty
       ansible.builtin.template:
-        src: "{{item.src}}"
-        dest: "{{item.dest}}"
+        src: "../templates/alacritty/{{item.src}}"
+        dest: "~/.config/alacritty/{{item.dest}}"
       with_items:
-        - {
-            src: templates/alacritty/alacritty.j2,
-            dest: ~/.config/alacritty/alacritty.toml,
-          }
-        - {
-            src: templates/alacritty/tokyonight_moon.j2,
-            dest: ~/.config/alacritty/themes/tokyonight_moon.toml,
-          }
+        - { src: alacritty.j2, dest: alacritty.toml }
+        - { src: tokyonight_moon.j2, dest: themes/tokyonight_moon.toml }
     - name: config erdtree
-      template: src={{item.src}} dest={{item.dest}}
+      ansible.builtin.template:
+        src: "../templates/erdtree/{{item.src}}"
+        dest: "~/.config/erdtree/{{item.dest}}"
       with_items:
-        - {
-            src: templates/erdtree/.erdtree.j2,
-            dest: ~/.config/erdtree/.erdtree.toml,
-          }
+        - { src: .erdtree.j2, dest: .erdtree.toml }
