@@ -34,10 +34,14 @@
         sshd_client_alive_count_max: 60
     - name: remove sudo hint from bashrc
       ansible.builtin.command: sed -i -e '/sudo hint/,+11 s/^/#/' /etc/bash.bashrc
-    - name: remove the legal text from motd
-      ansible.builtin.command: rm /etc/legal
-    - name: turn off help text in motd
-      ansible.builtin.command: chmod -x /etc/update-motd.d/10-help-text
+    - name: remove the legal quips from motd
+      ansible.builtin.file:
+        path: /etc/legal
+        state: absent
+    - name: Change file ownership, group and permissions
+      ansible.builtin.file:
+        path: /etc/update-motd.d/10-help-text
+        mode: '0655'
     - name: add yubico ppa
       ansible.builtin.apt_repository:
         repo: ppa:yubico/stable
