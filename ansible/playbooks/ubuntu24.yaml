@@ -168,7 +168,7 @@
 - name: Post build installation
   hosts: ubuntu
   vars:
-    home: "{{ansible_user_id}}"
+    home: /home/{{ansible_user_id}}
   tasks:
     - name: make install neovim
       community.general.make:
