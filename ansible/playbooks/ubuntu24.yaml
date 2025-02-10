@@ -171,12 +171,12 @@
   tasks:
     - name: make install neovim
       community.general.make:
-        chdir: ~/repos/third_party/neovim
+        chdir: /home/{{ansible_user_id}}/repos/third_party/neovim
         target: install
-        file: ~/repos/third_party/neovim/Makefile
+        file: /home/{{ansible_user_id}}/repos/third_party/neovim/Makefile
       become: true
     - name: install alacritty
       community.general.cargo:
         name: alacritty
         path: /usr/local
-        directory: ~/repos/third_party/alacritty
+        directory: /home/{{ansible_user_id}}/repos/third_party/alacritty
