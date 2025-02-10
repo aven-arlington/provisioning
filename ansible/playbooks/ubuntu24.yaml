@@ -14,7 +14,7 @@
         dest: /etc/sudoers.d/{{ansible_user_id}}
         owner: root
         group: root
-        mode: '0600'
+        mode: "0600"
         validate: /usr/sbin/visudo -cf %s
       vars:
         sudo_timestamp_timeout: 60
@@ -25,7 +25,7 @@
         dest: /etc/ssh/sshd_config.d/{{ansible_user_id}}.conf
         owner: root
         group: root
-        mode: '0600'
+        mode: "0600"
         validate: /usr/sbin/sshd -t -f %s
       vars:
         sshd_permit_root_login: "no"
@@ -41,7 +41,7 @@
     - name: Change file ownership, group and permissions
       ansible.builtin.file:
         path: /etc/update-motd.d/10-help-text
-        mode: '0655'
+        mode: "0655"
     - name: add yubico ppa
       ansible.builtin.apt_repository:
         repo: ppa:yubico/stable
@@ -50,10 +50,10 @@
         update_cache: true
     - name: install packages via apt
       ansible.builtin.apt:
-        name: 
+        name:
           - ubuntu-advantage-tools
           - build-essential
-          - libpam-u2f 
+          - libpam-u2f
           - yubikey-manager
           - openssh-server
           - git
@@ -62,9 +62,9 @@
           - dos2unix
           - ripgrep
           - ninja-build
-          - gettext 
+          - gettext
           - cmake
-          - g++ 
+          - g++
           - pkg-config
           - libfreetype6-dev
           - libfontconfig1-dev
@@ -85,7 +85,7 @@
       ansible.builtin.get_url:
         url: https://sh.rustup.rs
         dest: /tmp/sh.rustup.sh
-        mode: '0755'
+        mode: "0755"
         force: true
       tags:
         - rust
@@ -114,9 +114,22 @@
       template:
         src: ../templates/yubikey_setup.j2
         dest: /home/{{ansible_user_id}}/yubikey_setup.sh
-        mode: '0744'
+        mode: "0744"
     - name: create generic folder structure
-      ansible.builtin.command: mkdir -p /home/{{ansible_user_id}}/repos/{public_gh,private_gh,projects,sandboxes/{rust,cpp,leetcode},third_party}
+      file:
+        path: "/home/{{ansible_user_id}}/{{ item}}"
+        state: directory
+        mode: 0751
+      loop:
+        - /repos
+        - /repos/public_gh
+        - /repos/private_gh
+        - /repos/projects
+        - /repos/sandboxes
+        - /repos/sandboxes/rust
+        - /repos/sandboxes/cpp
+        - /repos/sandboxes/leetcode
+        - /repos/third_party
     - name: clone neovim
       ansible.builtin.git:
         repo: https://github.com/neovim/neovim.git
