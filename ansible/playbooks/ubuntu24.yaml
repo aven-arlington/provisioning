@@ -121,27 +121,27 @@
         mode: "0744"
     - name: create generic folder structure
       file:
-        path: "/home/{{ansible_user_id}}/{{ item}}"
+        path: ~/{{ item }}
         state: directory
         mode: 0751
       loop:
-        - /repos
-        - /repos/public_gh
-        - /repos/private_gh
-        - /repos/projects
-        - /repos/sandboxes
-        - /repos/sandboxes/rust
-        - /repos/sandboxes/cpp
-        - /repos/sandboxes/leetcode
-        - /repos/third_party
+        - repos
+        - repos/public_gh
+        - repos/private_gh
+        - repos/projects
+        - repos/sandboxes
+        - repos/sandboxes/rust
+        - repos/sandboxes/cpp
+        - repos/sandboxes/leetcode
+        - repos/third_party
     - name: clone neovim
       ansible.builtin.git:
         repo: https://github.com/neovim/neovim.git
-        dest: /home/{{ansible_user_id}}/repos/third_party/neovim
+        dest: ~/repos/third_party/neovim
         single_branch: yes
         version: stable
     - name: get latest release tag from alacritty repository
-      ansible.builtin.command: >
+      ansible.builtin.shell: >
         git -c 'versionsort.suffix=-' 
         ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/alacritty/alacritty.git '*.*.*' 
         | tail --lines=1 
@@ -150,6 +150,6 @@
     - name: clone alacritty
       ansible.builtin.git:
         repo: https://github.com/alacritty/alacritty.git
-        dest: /home/{{ansible_user_id}}/repos/third_party/alacritty
+        dest: ~/repos/third_party/alacritty
         single_branch: yes
         version: "{{ alacritty_stable.stdout }}"
