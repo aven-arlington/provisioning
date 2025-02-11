@@ -67,6 +67,7 @@
           - ripgrep
           - fd-find
           - fzf
+          - xclip
           - ninja-build
           - gettext
           - cmake
@@ -237,6 +238,7 @@
       loop:
         - nvim
         - alacritty
+        - alacritty/themes
         - erdtree
     - name: config alacritty
       ansible.builtin.template:
