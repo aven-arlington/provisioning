@@ -144,6 +144,9 @@
         repo: https://github.com/neovim/neovim.git
         dest: ~/repos/third_party/neovim
         single_branch: yes
+        # Note: this will set the config to fetch the latest stable tag:
+        # remote.origin.fetch=+refs/tags/stable:refs/tags/stable
+        # To enable normal branch behavior, use git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
         version: stable
     - name: build neovim release
       community.general.make:
@@ -162,12 +165,14 @@
         repo: https://github.com/alacritty/alacritty.git
         dest: ~/repos/third_party/alacritty
         single_branch: yes
+        # Note: this will set the config to fetch the latest stable tag:
+        # remote.origin.fetch=+refs/tags/v0.15.0:refs/tags/v0.15.0
+        # To enable normal branch behavior, use git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
         version: "{{ alacritty_stable.stdout }}"
     - name: alacritty completions
       ansible.builtin.shell: |
-        mkdir -p ~/.bash_completion
-        cp ~/repos/third_party/alacritty/extra/completions/alacritty.bash ~/.bash_completion/alacritty
-        echo "source ~/.bash_completion/alacritty" >> ~/.bashrc
+        mkdir -p ~/.local/share/bash_completion
+        cp ~/repos/third_party/alacritty/extra/completions/alacritty.bash ~/.local/share/bash_completion/alacritty
 - name: Post build installation
   hosts: ubuntu
   vars:
@@ -253,3 +258,22 @@
         dest: "~/.config/erdtree/{{item.dest}}"
       with_items:
         - { src: .erdtree.j2, dest: .erdtree.toml }
+    - name: download official git-prompt
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/git/git/refs/heads/master/contrib/completion/git-prompt.sh
+        dest: ~/.config/git-prompt.sh
+        mode: '0664'
+    - name: update .bashrc
+      ansible.builtin.blockinfile:
+        path: ~/.bashrc
+        append_newline: true
+        prepend_newline: true
+        block: |
+          source .venv/bin/activate
+          source ~/.local/share/bash_completion/alacritty
+          source ~/.config/git-prompt.sh
+          get_now() {
+              date +'%Y-%m-%d %H:%M:%S'
+          }
+          PS1='\[\033]0;\h: \w\]\[\033[38;2;224;175;104m${debian_chroot:+($debian_chroot)}\]\[\033[38;2;115;218;202m\]\h\[\033[38;2;192;202;245m\]: \[\033[38;2;122;162;247m\]\w\[\033[38;2;247;118;142m\]$(__git_ps1 " (%s)")\[\033[38;2;54;59;84m\] - $(get_now)\n\[\033[38;2;192;202;245m\]>'
+          cd ~/repos

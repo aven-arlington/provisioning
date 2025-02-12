@@ -9,3 +9,8 @@ The Ubuntu 24.04 auto-install feature can be used to create a USB boot drive tha
 ## [Ansible](ansible/README.md)
 
 Contains various Ansible playbooks and templates that automate the creation of new dev environments and more.
+
+
+## [Customizing the Terminal](terminal/terminal.md)
+
+Contains helpful information about customizing the terminal.
