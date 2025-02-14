@@ -297,7 +297,7 @@
         - name: config alacritty
           ansible.builtin.template:
             src: "../templates/alacritty/{{item.src}}"
-            dest: "~/.config/alacritty/{{item.dest}}"
+            dest: "~/.config/alacritty/"
           with_items:
             - { src: alacritty.j2, dest: alacritty.toml }
             - { src: tokyonight_moon.j2, dest: themes/tokyonight_moon.toml }
