@@ -205,6 +205,7 @@
       vars:
         user_home: /home/{{ansible_user_id}}
         repo_root: "{{user_home}}/repos/third_party/alacritty"
+        font_dir: /usr/share/fonts/nerd_ubuntu_sans
       block:
         - name: update apt cache
           become: true
@@ -275,8 +276,6 @@
           register: nf_latest
         - name: create font directory
           become: true
-          args:
-            font_dir: /usr/share/fonts/nerd_ubuntu_sans
           ansible.builtin.file:
             path: "{{ font_dir }}"
             state: directory
