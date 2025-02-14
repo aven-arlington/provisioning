@@ -207,6 +207,7 @@
         repo_root: "{{user_home}}/repos/third_party/alacritty"
       block:
         - name: update apt cache
+          become: true
           ansible.builtin.apt:
             update_cache: true
         - name: install packages via apt
@@ -301,6 +302,7 @@
         repo_root: "{{user_home}}/repos/third_party/neovim"
       block:
         - name: update apt cache
+          become: true
           ansible.builtin.apt:
             update_cache: true
         - name: install packages via apt
