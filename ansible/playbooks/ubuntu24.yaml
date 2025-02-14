@@ -121,7 +121,7 @@
         - name: download official git-prompt
           ansible.builtin.get_url:
             url: https://raw.githubusercontent.com/git/git/refs/heads/master/contrib/completion/git-prompt.sh
-            dest: ~/.config/git-prompt.sh
+            dest: ~/.config/
             mode: '0664'
         - name: update .bashrc
           ansible.builtin.blockinfile:
