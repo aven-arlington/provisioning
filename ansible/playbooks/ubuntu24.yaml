@@ -1,279 +1,371 @@
 # Ansible playbook for a standard Ubuntu 24.04 development machine
-- name: Steps that require elevation
+- name: ubuntu 24.04 setup
   hosts: ubuntu
   gather_facts: true
-  become: true
   tasks:
-    - name: apt update and upgrade
-      ansible.builtin.apt:
-        update_cache: true
-        upgrade: true
-    - name: system wide sudo configuration
-      ansible.builtin.template:
-        src: ../templates/sudoers.j2
-        dest: /etc/sudoers.d/{{ansible_user_id}}
-        owner: root
-        group: root
-        mode: "0600"
-        validate: /usr/sbin/visudo -cf %s
+    - name: core ubuntu setup
+      become: true
+      block:
+        - name: apt update and upgrade
+          ansible.builtin.apt:
+            update_cache: true
+            upgrade: true
+        - name: install packages via apt
+          ansible.builtin.apt:
+            name:
+              - ubuntu-advantage-tools
+              - build-essential
+              - cmake
+              - openssh-server
+              - git
+              - curl
+              - python3-venv
+              - dos2unix
+              - xclip
+              - gzip
+              - scdoc
+        - name: system wide sudo configuration
+          ansible.builtin.template:
+            src: ../templates/sudoers.j2
+            dest: /etc/sudoers.d/{{ansible_user_id}}
+            owner: root
+            group: root
+            mode: "0600"
+            validate: /usr/sbin/visudo -cf %s
+          vars:
+            sudo_timestamp_timeout: 60
+            sudo_passwd_tries: 3
+        - name: system wide sshd configuration
+          ansible.builtin.template:
+            src: ../templates/sshd.conf.j2
+            dest: /etc/ssh/sshd_config.d/{{ansible_user_id}}.conf
+            owner: root
+            group: root
+            mode: "0600"
+            validate: /usr/sbin/sshd -t -f %s
+          vars:
+            sshd_permit_root_login: "no"
+            sshd_password_authentication: "no"
+            sshd_client_alive_interval: 60
+            sshd_client_alive_count_max: 60
+        - name: remove sudo hint from bashrc
+          ansible.builtin.command: sed -i -e '/sudo hint/,+11 s/^/#/' /etc/bash.bashrc
+        - name: remove the legal quips from motd
+          ansible.builtin.file:
+            path: /etc/legal
+            state: absent
+        - name: Change file ownership, group and permissions
+          ansible.builtin.file:
+            path: /etc/update-motd.d/10-help-text
+            mode: "0655"
+    - name: optional yubico setup
+      become: true
+      block:
+        - name: add yubico ppa
+          ansible.builtin.apt_repository:
+            repo: ppa:yubico/stable
+        - name: update apt cache
+          ansible.builtin.apt:
+            update_cache: true
+        - name: install packages via apt
+          ansible.builtin.apt:
+            name:
+              - libpam-u2f
+              - yubikey-manager
+        - name: yubikey setup script template
+          become: false
+          ansible.builtin.template:
+            src: ../templates/yubikey_setup.j2
+            dest: /home/{{ansible_user_id}}/yubikey_setup.sh
+            mode: "0744"
+    - name: python installation
       vars:
-        sudo_timestamp_timeout: 60
-        sudo_passwd_tries: 3
-    - name: system wide sshd configuration
-      ansible.builtin.template:
-        src: ../templates/sshd.conf.j2
-        dest: /etc/ssh/sshd_config.d/{{ansible_user_id}}.conf
-        owner: root
-        group: root
-        mode: "0600"
-        validate: /usr/sbin/sshd -t -f %s
+        ansible_python_interpreter: /usr/bin/python3
+      block:
+        - name: install common python modules
+          ansible.builtin.pip:
+            virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
+            virtualenv: "/home/{{ansible_user_id}}/.venv"
+            name:
+              - poetry
+              - flake9
+              - black
+              - pytest
+              - ruff
+              - mkdocs
+              - requests
+              - matplotlib
+              - numpy
+              - pandas
+              - bokeh
+    - name: rust installation
+      block:
+        - name: check if cargo is installed
+          shell: command -v cargo
+          register: cargo_exists
+          ignore_errors: true
+        - name: download rust installer
+          when: cargo_exists is failed
+          ansible.builtin.get_url:
+            url: https://sh.rustup.rs
+            dest: /tmp/sh.rustup.sh
+            mode: "0755"
+            force: true
+          tags:
+            - rust
+        - name: install rustup and cargo
+          when: cargo_exists is failed
+          shell: /tmp/sh.rustup.sh -y
+          tags:
+            - rust
+    - name: personalization
+      block:
+        - name: download official git-prompt
+          ansible.builtin.get_url:
+            url: https://raw.githubusercontent.com/git/git/refs/heads/master/contrib/completion/git-prompt.sh
+            dest: ~/.config/git-prompt.sh
+            mode: '0664'
+        - name: update .bashrc
+          ansible.builtin.blockinfile:
+            path: ~/.bashrc
+            append_newline: true
+            prepend_newline: true
+            block: |
+              source .venv/bin/activate
+              source ~/.config/git-prompt.sh
+              get_now() {
+                  date +'%Y-%m-%d %H:%M:%S'
+              }
+              PS1='\[\033]0;\h: \w\]\[\033[38;2;224;175;104m${debian_chroot:+($debian_chroot)}\]\[\033[38;2;115;218;202m\]\h\[\033[38;2;192;202;245m\]: \[\033[38;2;122;162;247m\]\w\[\033[38;2;247;118;142m\]$(__git_ps1 " (%s)")\[\033[38;2;54;59;84m\] - $(get_now)\n\[\033[38;2;192;202;245m\]>'
+              cd ~/repos
+        - name: create generic folder structure
+          ansible.builtin.file:
+            path: ~/{{ item }}
+            state: directory
+            mode: 0751
+          loop:
+            - repos
+            - repos/public_gh
+            - repos/private_gh
+            - repos/projects
+            - repos/sandboxes
+            - repos/sandboxes/rust
+            - repos/sandboxes/cpp
+            - repos/sandboxes/leetcode
+            - repos/third_party
+    - name: utilities
+      block:
+        - name: install packages via apt
+          become: true
+          ansible.builtin.apt:
+            name:
+            - bat
+            - ripgrep
+            - fd-find
+            - fzf
+        - name: configure utilities
+          become: true
+          ansible.builtin.shell: |
+            sudo ln -s /usr/bin/batcat /usr/bin/bat
+            sudo ln -s $(which fdfind) /usr/bin/fd
+          args:
+            executable: /bin/bash
+        - name: update .bashrc
+          ansible.builtin.blockinfile:
+            path: ~/.bashrc
+            append_newline: true
+            block: |
+              eval "$(fzf --bash)"
+        - name: get latest erdtree url
+          ansible.builtin.uri:
+            url: https:/api.github.com/repos/solidiquis/erdtree/releases/latest
+            return_content: true
+          register: erdtree_latest
+        - name: install erdtree {{ erdtree_latest.json.tag_name }}
+          become: true
+          loop: "{{ erdtree_latest.json.assets }}"
+          when: "'-x86_64-unknown-linux-gnu.tar.gz' in item.name"
+          ansible.builtin.unarchive:
+            remote_src: true
+            src: "{{ item.browser_download_url }}"
+            dest: "/usr/bin/"
+            keep_newer: true
+            extra_opts:
+              - --wildcards "erd"
+        - name: config erdtree
+          ansible.builtin.template:
+            src: "../templates/erdtree/{{item.src}}"
+            dest: "~/.config/erdtree/{{item.dest}}"
+          with_items:
+            - { src: .erdtree.j2, dest: .erdtree.toml }
+    - name: alacritty
       vars:
-        sshd_permit_root_login: "no"
-        sshd_password_authentication: "no"
-        sshd_client_alive_interval: 60
-        sshd_client_alive_count_max: 60
-    - name: remove sudo hint from bashrc
-      ansible.builtin.command: sed -i -e '/sudo hint/,+11 s/^/#/' /etc/bash.bashrc
-    - name: remove .sudo_as_admin_successful
-      ansible.builtin.file:
-        path: ~/.sudo_as_admin_successful
-        state: absent
-    - name: remove the legal quips from motd
-      ansible.builtin.file:
-        path: /etc/legal
-        state: absent
-    - name: Change file ownership, group and permissions
-      ansible.builtin.file:
-        path: /etc/update-motd.d/10-help-text
-        mode: "0655"
-    - name: add yubico ppa
-      ansible.builtin.apt_repository:
-        repo: ppa:yubico/stable
-    - name: update apt cache
-      ansible.builtin.apt:
-        update_cache: true
-    - name: install packages via apt
-      ansible.builtin.apt:
-        name:
-          - ubuntu-advantage-tools
-          - build-essential
-          - libpam-u2f
-          - yubikey-manager
-          - openssh-server
-          - git
-          - curl
-          - python3-venv
-          - dos2unix
-          - ripgrep
-          - fd-find
-          - fzf
-          - xclip
-          - ninja-build
-          - gettext
-          - cmake
-          - g++
-          - pkg-config
-          - libfreetype6-dev
-          - libfontconfig1-dev
-          - libxcb-xfixes0-dev
-          - libxkbcommon-dev
-          - gzip
-          - scdoc
-- name: Steps that do NOT require elevation
-  hosts: ubuntu
-  become: false
-  vars:
-    ansible_python_interpreter: /usr/bin/python3
-  tasks:
-    - name: check if cargo is installed
-      shell: command -v cargo
-      register: cargo_exists
-      ignore_errors: true
-    - name: download rust installer
-      when: cargo_exists is failed
-      ansible.builtin.get_url:
-        url: https://sh.rustup.rs
-        dest: /tmp/sh.rustup.sh
-        mode: "0755"
-        force: true
-      tags:
-        - rust
-    - name: install rustup and cargo
-      when: cargo_exists is failed
-      shell: /tmp/sh.rustup.sh -y
-      tags:
-        - rust
-    - name: install common python modules
-      ansible.builtin.pip:
-        virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
-        virtualenv: "/home/{{ansible_user_id}}/.venv"
-        name:
-          - poetry
-          - flake9
-          - black
-          - pytest
-          - ruff
-          - mkdocs
-          - requests
-          - matplotlib
-          - numpy
-          - pandas
-          - bokeh
-    - name: install yubikey setup script
-      ansible.builtin.template:
-        src: ../templates/yubikey_setup.j2
-        dest: /home/{{ansible_user_id}}/yubikey_setup.sh
-        mode: "0744"
-    - name: create generic folder structure
-      ansible.builtin.file:
-        path: ~/{{ item }}
-        state: directory
-        mode: 0751
-      loop:
-        - repos
-        - repos/public_gh
-        - repos/private_gh
-        - repos/projects
-        - repos/sandboxes
-        - repos/sandboxes/rust
-        - repos/sandboxes/cpp
-        - repos/sandboxes/leetcode
-        - repos/third_party
-    - name: clone neovim
-      ansible.builtin.git:
-        repo: https://github.com/neovim/neovim.git
-        dest: ~/repos/third_party/neovim
-        single_branch: yes
-        # Note: this will set the config to fetch the latest stable tag:
-        # remote.origin.fetch=+refs/tags/stable:refs/tags/stable
-        # To enable normal branch behavior, use git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-        version: stable
-    - name: build neovim release
-      community.general.make:
-        chdir: ~/repos/third_party/neovim
-        params:
-          CMAKE_BUILD_TYPE: Release
-    - name: get latest release tag from alacritty repository
-      ansible.builtin.shell: >
-        git -c 'versionsort.suffix=-' 
-        ls-remote --exit-code --refs --sort='version:refname' --tags https://github.com/alacritty/alacritty.git '*.*.*' 
-        | tail --lines=1 
-        | cut --delimiter='/' --fields=3
-      register: alacritty_stable
-    - name: clone alacritty
-      ansible.builtin.git:
-        repo: https://github.com/alacritty/alacritty.git
-        dest: ~/repos/third_party/alacritty
-        single_branch: yes
-        # Note: this will set the config to fetch the latest stable tag:
-        # remote.origin.fetch=+refs/tags/v0.15.0:refs/tags/v0.15.0
-        # To enable normal branch behavior, use git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-        version: "{{ alacritty_stable.stdout }}"
-    - name: alacritty completions
-      ansible.builtin.shell: |
-        mkdir -p ~/.local/share/bash_completion
-        cp ~/repos/third_party/alacritty/extra/completions/alacritty.bash ~/.local/share/bash_completion/alacritty
-- name: Post build installation
-  hosts: ubuntu
-  vars:
-    home: /home/{{ansible_user_id}}
-  tasks:
-    - name: make install neovim
-      community.general.make:
-        chdir: "{{home}}/repos/third_party/neovim"
-        target: install
-        file: "{{home}}/repos/third_party/neovim/Makefile"
-      become: true
-    - name: build alacritty
-      ansible.builtin.shell: |
-        source ~/.cargo/env
-        cd {{home}}/repos/third_party/alacritty
-        cargo build --release
-      args:
-        executable: /bin/bash
-    - name: install alacritty
-      ansible.builtin.shell: |
-        cd {{home}}/repos/third_party/alacritty
-        cp target/release/alacritty /usr/local/bin
-        cp extra/logo/alacritty-term.svg /usr/share/pixmaps/Alacritty.svg
-        desktop-file-install extra/linux/Alacritty.desktop
-        update-desktop-database
-        mkdir -p /usr/local/share/man/man1
-        mkdir -p /usr/local/share/man/man5
-        scdoc < extra/man/alacritty.1.scd | gzip -c | tee /usr/local/share/man/man1/alacritty.1.gz > /dev/null
-        scdoc < extra/man/alacritty-msg.1.scd | gzip -c | tee /usr/local/share/man/man1/alacritty-msg.1.gz > /dev/null
-        scdoc < extra/man/alacritty.5.scd | gzip -c | tee /usr/local/share/man/man5/alacritty.5.gz > /dev/null
-        scdoc < extra/man/alacritty-bindings.5.scd | gzip -c | tee /usr/local/share/man/man5/alacritty-bindings.5.gz > /dev/null
-      become: true
-      args:
-        executable: /bin/bash
-    - name: install erdtree
-      ansible.builtin.shell: |
-        source ~/.cargo/env
-        cargo install erdtree
-      args:
-        executable: /bin/bash
-    - name: install nerd fonts
-      ansible.builtin.shell: |
-        curl -o /tmp/UbuntuSans.tar.xz -L https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuSans.tar.xz
-        mkdir -p /usr/share/fonts/nerd_ubuntu_sans
-        tar -xvJf /tmp/UbuntuSans.tar.xz -C /usr/share/fonts/nerd_ubuntu_sans --wildcards "*.ttf"
-        fc-cache -f -v
-      become: true
-      args:
-        executable: /bin/bash
-    - name: set default applications
-      ansible.builtin.shell: |
-        update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/local/bin/alacritty 50
-        update-alternatives --auto x-terminal-emulator
-        update-alternatives --install /usr/bin/editor editor /usr/local/bin/nvim-wrapper 50
-        update-alternatives --auto editor
-        update-alternatives --install /usr/bin/vim vim /usr/local/bin/nvim-wrapper 50
-        update-alternatives --auto vim
-        update-alternatives --install /usr/bin/vi vi /usr/local/bin/nvim-wrapper 50
-        update-alternatives --auto vi
-      become: true
-      args:
-        executable: /bin/bash
-    - name: config directories
-      ansible.builtin.file:
-        path: ~/.config/{{ item }}
-        state: directory
-        mode: 0751
-      loop:
-        - nvim
-        - alacritty
-        - alacritty/themes
-        - erdtree
-    - name: config alacritty
-      ansible.builtin.template:
-        src: "../templates/alacritty/{{item.src}}"
-        dest: "~/.config/alacritty/{{item.dest}}"
-      with_items:
-        - { src: alacritty.j2, dest: alacritty.toml }
-        - { src: tokyonight_moon.j2, dest: themes/tokyonight_moon.toml }
-    - name: config erdtree
-      ansible.builtin.template:
-        src: "../templates/erdtree/{{item.src}}"
-        dest: "~/.config/erdtree/{{item.dest}}"
-      with_items:
-        - { src: .erdtree.j2, dest: .erdtree.toml }
-    - name: download official git-prompt
-      ansible.builtin.get_url:
-        url: https://raw.githubusercontent.com/git/git/refs/heads/master/contrib/completion/git-prompt.sh
-        dest: ~/.config/git-prompt.sh
-        mode: '0664'
-    - name: update .bashrc
-      ansible.builtin.blockinfile:
-        path: ~/.bashrc
-        append_newline: true
-        prepend_newline: true
-        block: |
-          source .venv/bin/activate
-          source ~/.local/share/bash_completion/alacritty
-          source ~/.config/git-prompt.sh
-          get_now() {
-              date +'%Y-%m-%d %H:%M:%S'
-          }
-          PS1='\[\033]0;\h: \w\]\[\033[38;2;224;175;104m${debian_chroot:+($debian_chroot)}\]\[\033[38;2;115;218;202m\]\h\[\033[38;2;192;202;245m\]: \[\033[38;2;122;162;247m\]\w\[\033[38;2;247;118;142m\]$(__git_ps1 " (%s)")\[\033[38;2;54;59;84m\] - $(get_now)\n\[\033[38;2;192;202;245m\]>'
-          cd ~/repos
+        user_home: /home/{{ansible_user_id}}
+        repo_root: "{{user_home}}/repos/third_party/alacritty"
+      block:
+        - name: update apt cache
+          ansible.builtin.apt:
+            update_cache: true
+        - name: install packages via apt
+          become: true
+          ansible.builtin.apt:
+            name:
+              - pkg-config
+              - libfreetype6-dev 
+              - libfontconfig1-dev
+              - libxcb-xfixes0-dev
+              - libxkbcommon-dev
+        - name: get latest release tag from alacritty repository
+          ansible.builtin.uri:
+            url: https:/api.github.com/repos/alacritty/alacritty/releases/latest
+            return_content: true
+          register: alacritty_latest
+        - name: clone alacritty {{ alacritty_latest.json.tag_name }}
+          ansible.builtin.git:
+            repo: https://github.com/alacritty/alacritty.git
+            dest: "{{ repo_root }}"
+            single_branch: yes
+            # Note: this will set the config to fetch the latest stable tag:
+            # remote.origin.fetch=+refs/tags/v0.15.0:refs/tags/v0.15.0
+            # To enable normal branch behavior, use git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+            version: " {{ alacritty_latest.json.tag_name }}"
+        - name: build alacritty
+          ansible.builtin.shell: |
+            source ~/.cargo/env
+            cd {{repo_root}}
+            cargo build --release
+          args:
+            executable: /bin/bash
+        - name: install alacritty
+          become: true
+          ansible.builtin.shell: |
+            cp ./target/release/alacritty /usr/bin
+            cp ./extra/completions/alacritty.bash /etc/bash_completion.d/alacritty
+            cp ./extra/logo/alacritty-term.svg /usr/share/pixmaps/Alacritty.svg
+            desktop-file-install ./extra/linux/Alacritty.desktop
+            update-desktop-database
+            mkdir -p /usr/local/share/man/man1
+            mkdir -p /usr/local/share/man/man5
+            scdoc < extra/man/alacritty.1.scd | gzip -c | tee /usr/local/share/man/man1/alacritty.1.gz > /dev/null
+            scdoc < extra/man/alacritty-msg.1.scd | gzip -c | tee /usr/local/share/man/man1/alacritty-msg.1.gz > /dev/null
+            scdoc < extra/man/alacritty.5.scd | gzip -c | tee /usr/local/share/man/man5/alacritty.5.gz > /dev/null
+            scdoc < extra/man/alacritty-bindings.5.scd | gzip -c | tee /usr/local/share/man/man5/alacritty-bindings.5.gz > /dev/null
+          args:
+            executable: /bin/bash
+            chdir: "{{repo_root}}"
+        - name: fix git refs
+          ansible.builtin.shell: |
+            git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+          args:
+            chdir: "{{repo_root}}"
+        - name: set default terminal
+          ansible.builtin.shell: |
+            update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/local/bin/alacritty 50
+            update-alternatives --auto x-terminal-emulator
+          become: true
+          args:
+            executable: /bin/bash
+        - name: get latest nerd fonts release
+          ansible.builtin.uri:
+            url: https:/api.github.com/repos/ryanoasis/nerd-fonts/releases/latest
+            return_content: true
+          register: nf_latest
+        - name: install nerd fonts {{ nf_latest.json.tag_name }}
+          become: true
+          loop: "{{ nf_latest.json.assets }}"
+          when: "'UbuntuSans.tar.xz' in item.name"
+          ansible.builtin.unarchive:
+            remote_src: true
+            src: "{{ item.browser_download_url }}"
+            dest: "/usr/share/fonts/nerd_ubuntu_sans"
+            keep_newer: true
+            extra_opts:
+              - --wildcards "*.ttf"
+        - name: refresh font cache
+          ansible.builtin.shell: fc-cache -f -v
+          become: true
+          args:
+            executable: /bin/bash
+        - name: config alacritty
+          ansible.builtin.template:
+            src: "../templates/alacritty/{{item.src}}"
+            dest: "~/.config/alacritty/{{item.dest}}"
+          with_items:
+            - { src: alacritty.j2, dest: alacritty.toml }
+            - { src: tokyonight_moon.j2, dest: themes/tokyonight_moon.toml }
+    - name: neovim
+      vars:
+        user_home: /home/{{ansible_user_id}}
+        repo_root: "{{user_home}}/repos/third_party/neovim"
+      block:
+        - name: update apt cache
+          ansible.builtin.apt:
+            update_cache: true
+        - name: install packages via apt
+          become: true
+          ansible.builtin.apt:
+            name:
+              - ninja-build
+              - gettext
+        - name: clone neovim
+          ansible.builtin.git:
+            repo: https://github.com/neovim/neovim.git
+            dest: "{{user_home}}"
+            single_branch: yes
+            # Note: this will set the config to fetch the latest stable tag:
+            # remote.origin.fetch=+refs/tags/stable:refs/tags/stable
+            # To enable normal branch behavior, use git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
+            version: stable
+        - name: build neovim release
+          community.general.make:
+            chdir: "{{user_home}}"
+            params:
+              CMAKE_BUILD_TYPE: Release
+        - name: make install neovim
+          community.general.make:
+            chdir: "{{user_home}}"
+            target: install
+            file: "{{user_home}}/Makefile"
+          become: true
+        - name: set neovim priority
+          ansible.builtin.shell: |
+            update-alternatives --install /usr/bin/editor editor /usr/local/bin/nvim-wrapper 50
+            update-alternatives --auto editor
+            update-alternatives --install /usr/bin/vim vim /usr/local/bin/nvim-wrapper 50
+            update-alternatives --auto vim
+            update-alternatives --install /usr/bin/vi vi /usr/local/bin/nvim-wrapper 50
+            update-alternatives --auto vi
+          become: true
+          args:
+            executable: /bin/bash
+    - name: helix
+      vars:
+        user_home: /home/{{ansible_user_id}}
+        temp_loc: "/tmp/helix/"
+      block:
+        - name: get helix release tag
+          ansible.builtin.uri:
+            url: https:/api.github.com/repos/helix-editor/helix/releases/latest
+            return_content: true
+          register: helix_latest
+        - name: download helix {{ helix_latest.json.tag_name }}
+          become: true
+          loop: "{{ helix_latest.json.assets }}"
+          when: "'-x86_64-linux.tar.xz ' in item.name"
+          ansible.builtin.unarchive:
+            remote_src: true
+            src: "{{ item.browser_download_url }}"
+            dest: "{{temp_loc}}"
+            keep_newer: true
+            extra_opts:
+              - --wildcards "*.ttf"
+        - name: install helix {{ helix_latest.json.tag_name }}
+          become: true
+          ansible.builtin.shell: |
+            cp ./hx /usr/bin
+            mkdir -p /usr/share/helix
+            cp ./runtime /usr/share/helix/
+          args:
+            executable: /bin/bash
+            chdir: "{{temp_loc}}"
+
