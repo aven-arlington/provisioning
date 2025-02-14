@@ -273,6 +273,14 @@
             url: https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest
             return_content: true
           register: nf_latest
+        - name: create font directory
+          become: true
+          args:
+            font_dir: /usr/share/fonts/nerd_ubuntu_sans
+          ansible.builtin.file:
+            path: "{{ font_dir }}"
+            state: directory
+            mode: '0755'
         - name: install nerd fonts {{ nf_latest.json.tag_name }}
           become: true
           loop: "{{ nf_latest.json.assets }}"
@@ -280,7 +288,7 @@
           ansible.builtin.unarchive:
             remote_src: true
             src: "{{ item.browser_download_url }}"
-            dest: "/usr/share/fonts/nerd_ubuntu_sans"
+            dest: "{{ font_dir }}"
             keep_newer: true
             include: "*.tff"
         - name: refresh font cache
@@ -344,7 +352,7 @@
     - name: helix
       vars:
         user_home: /home/{{ansible_user_id}}
-        temp_loc: "/tmp/helix/"
+        temp_loc: "/tmp/"
       block:
         - name: get helix release tag
           ansible.builtin.uri:
