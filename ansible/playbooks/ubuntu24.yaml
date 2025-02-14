@@ -163,13 +163,18 @@
             - ripgrep
             - fd-find
             - fzf
-        - name: configure utilities
+        - name: create batcat symlink
           become: true
-          ansible.builtin.shell: |
-            sudo ln -s /usr/bin/batcat /usr/bin/bat
-            sudo ln -s $(which fdfind) /usr/bin/fd
-          args:
-            executable: /bin/bash
+          ansible.builtin.file:
+            src: /usr/bin/batcat
+            dest: /usr/bin/bat
+            state: link
+        - name: create fd-find symlink
+          become: true
+          ansible.builtin.file:
+            src: $(which fdfind)
+            dest: /usr/bin/fd
+            state: link
         - name: update .bashrc
           ansible.builtin.blockinfile:
             path: ~/.bashrc
