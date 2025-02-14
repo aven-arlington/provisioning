@@ -356,7 +356,7 @@
       block:
         - name: get helix release tag
           ansible.builtin.uri:
-            url: https:/api.github.com/repos/helix-editor/helix/releases/latest
+            url: https://api.github.com/repos/helix-editor/helix/releases/latest
             return_content: true
           register: helix_latest
         - name: download helix {{ helix_latest.json.tag_name }}
