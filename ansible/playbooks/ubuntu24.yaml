@@ -367,13 +367,16 @@
             remote_src: true
             src: "{{ item.browser_download_url }}"
             dest: "{{temp_loc}}"
+            owner: "{{ansible_user_id }}"
+            group: "{{ansible_user_id }}"
+            extra_opts: ['--strip-components=1', '--show-stored-names']
             keep_newer: true
         - name: install helix {{ helix_latest.json.tag_name }}
           become: true
           ansible.builtin.shell: |
             cp ./hx /usr/bin
             mkdir -p /usr/share/helix
-            cp ./runtime /usr/share/helix/
+            cp -r ./runtime /usr/share/helix/
           args:
             executable: /bin/bash
             chdir: "{{temp_loc}}"
