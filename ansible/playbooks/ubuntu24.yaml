@@ -169,10 +169,13 @@
             src: /usr/bin/batcat
             dest: /usr/bin/bat
             state: link
+        - name: which fd-find
+          ansible.builtin.command: which fdfind
+          register: fd_find_path
         - name: create fd-find symlink
           become: true
           ansible.builtin.file:
-            src: $(which fdfind)
+            src: "{{ fd_find_path.stdout }}"
             dest: /usr/bin/fd
             state: link
         - name: update .bashrc
