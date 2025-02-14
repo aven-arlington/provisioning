@@ -79,8 +79,6 @@
             dest: /home/{{ansible_user_id}}/yubikey_setup.sh
             mode: "0744"
     - name: python installation
-      vars:
-        ansible_python_interpreter: /usr/bin/python3
       block:
         - name: install common python modules
           ansible.builtin.pip:
@@ -199,6 +197,7 @@
             dest: "/usr/bin/"
             keep_newer: true
             extra_opts:
+              - --gzip
               - --wildcards "erd"
         - name: config erdtree
           ansible.builtin.template:
@@ -288,6 +287,7 @@
             dest: "/usr/share/fonts/nerd_ubuntu_sans"
             keep_newer: true
             extra_opts:
+              - --xz
               - --wildcards "*.ttf"
         - name: refresh font cache
           ansible.builtin.shell: fc-cache -f -v
@@ -366,6 +366,7 @@
             dest: "{{temp_loc}}"
             keep_newer: true
             extra_opts:
+              - --xz
               - --wildcards "*.ttf"
         - name: install helix {{ helix_latest.json.tag_name }}
           become: true
