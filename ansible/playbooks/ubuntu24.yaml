@@ -228,11 +228,10 @@
           ansible.builtin.git:
             repo: https://github.com/alacritty/alacritty.git
             dest: "{{ repo_root }}"
-            single_branch: yes
             # Note: this will set the config to fetch the latest stable tag:
             # remote.origin.fetch=+refs/tags/v0.15.0:refs/tags/v0.15.0
             # To enable normal branch behavior, use git config remote.origin.fetch "+refs/heads/*:refs/remotes/origin/*"
-            version: " {{ alacritty_latest.json.tag_name }}"
+            version: "{{ alacritty_latest.json.tag_name }}"
         - name: build alacritty
           ansible.builtin.shell: |
             source ~/.cargo/env
