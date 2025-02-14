@@ -335,9 +335,9 @@
             file: "{{repo_root}}/Makefile"
           become: true
         - name: config neovim
-          ansible.builtin.template:
-            src: "../templates/alacritty/tokyonight_moon.j2"
-            dest: "~/.config/alacritty/themes/tokyonight_moon.toml"
+          ansible.builtin.copy:
+            src: "../templates/alacritty/tokyonight_moon.toml"
+            dest: "~/.config/alacritty/themes/"
         - name: set neovim priority
           ansible.builtin.shell: |
             update-alternatives --install /usr/bin/editor editor /usr/local/bin/nvim-wrapper 50
