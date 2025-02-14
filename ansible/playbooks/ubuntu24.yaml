@@ -58,6 +58,17 @@
           ansible.builtin.file:
             path: /etc/update-motd.d/10-help-text
             mode: "0655"
+        - name: create XDG folders
+          become: false
+          ansible.builtin.file:
+            path: ~/{{ item }}
+            state: directory
+            mode: 0700
+          loop:
+            - .config
+            - .local
+            - .local/bin
+            - .local/share
     - name: optional yubico setup
       become: true
       block:
