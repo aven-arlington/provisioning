@@ -362,7 +362,7 @@
         - name: download helix {{ helix_latest.json.tag_name }}
           become: true
           loop: "{{ helix_latest.json.assets }}"
-          when: "'-x86_64-linux.tar.xz ' in item.name"
+          when: "'-x86_64-linux.tar.xz' in item.name"
           ansible.builtin.unarchive:
             remote_src: true
             src: "{{ item.browser_download_url }}"
