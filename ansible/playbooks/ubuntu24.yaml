@@ -300,11 +300,9 @@
             dest: "~/.config/alacritty/"
           with_items:
             - { src: alacritty.j2, dest: alacritty.toml }
-            - { src: tokyonight_moon.j2, dest: themes/tokyonight_moon.toml }
     - name: neovim
       vars:
-        user_home: /home/{{ansible_user_id}}
-        repo_root: "{{user_home}}/repos/third_party/neovim"
+        repo_root: "//home/{{ansible_user_id}}/repos/third_party/neovim"
       block:
         - name: update apt cache
           become: true
@@ -319,7 +317,7 @@
         - name: clone neovim
           ansible.builtin.git:
             repo: https://github.com/neovim/neovim.git
-            dest: "{{user_home}}"
+            dest: "{{repo_root}}"
             single_branch: yes
             # Note: this will set the config to fetch the latest stable tag:
             # remote.origin.fetch=+refs/tags/stable:refs/tags/stable
@@ -327,15 +325,19 @@
             version: stable
         - name: build neovim release
           community.general.make:
-            chdir: "{{user_home}}"
+            chdir: "{{repo_root}}"
             params:
               CMAKE_BUILD_TYPE: Release
         - name: make install neovim
           community.general.make:
-            chdir: "{{user_home}}"
+            chdir: "{{repo_root}}"
             target: install
-            file: "{{user_home}}/Makefile"
+            file: "{{repo_root}}/Makefile"
           become: true
+        - name: config neovim
+          ansible.builtin.template:
+            src: "../templates/alacritty/tokyonight_moon.j2"
+            dest: "~/.config/alacritty/themes/tokyonight_moon.toml"
         - name: set neovim priority
           ansible.builtin.shell: |
             update-alternatives --install /usr/bin/editor editor /usr/local/bin/nvim-wrapper 50
