@@ -200,7 +200,7 @@
         - name: config erdtree
           ansible.builtin.copy:
             src: "../templates/erdtree/.erdtree.toml"
-            dest: "~/.config/erdtree/.erdtree.toml"
+            dest: "~/.config/erdtree/"
     - name: alacritty
       vars:
         user_home: /home/{{ansible_user_id}}
