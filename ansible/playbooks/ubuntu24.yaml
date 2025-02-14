@@ -82,7 +82,7 @@
       block:
         - name: install common python modules
           ansible.builtin.pip:
-            virtualenv_command: "{{ ansible_python_interpreter }} -m venv"
+            virtualenv_command: "{{ discovered_interpreter_python }} -m venv"
             virtualenv: "/home/{{ansible_user_id}}/.venv"
             name:
               - poetry
@@ -196,9 +196,7 @@
             src: "{{ item.browser_download_url }}"
             dest: "/usr/bin/"
             keep_newer: true
-            extra_opts:
-              - --gzip
-              - --wildcards "erd"
+            include: "erd"
         - name: config erdtree
           ansible.builtin.template:
             src: "../templates/erdtree/{{item.src}}"
@@ -286,9 +284,7 @@
             src: "{{ item.browser_download_url }}"
             dest: "/usr/share/fonts/nerd_ubuntu_sans"
             keep_newer: true
-            extra_opts:
-              - --xz
-              - --wildcards "*.ttf"
+            include: "*.tff"
         - name: refresh font cache
           ansible.builtin.shell: fc-cache -f -v
           become: true
@@ -365,9 +361,6 @@
             src: "{{ item.browser_download_url }}"
             dest: "{{temp_loc}}"
             keep_newer: true
-            extra_opts:
-              - --xz
-              - --wildcards "*.ttf"
         - name: install helix {{ helix_latest.json.tag_name }}
           become: true
           ansible.builtin.shell: |
