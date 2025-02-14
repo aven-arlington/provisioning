@@ -198,11 +198,9 @@
             keep_newer: true
             include: "erd"
         - name: config erdtree
-          ansible.builtin.template:
-            src: "../templates/erdtree/{{item.src}}"
-            dest: "~/.config/erdtree/{{item.dest}}"
-          with_items:
-            - { src: .erdtree.j2, dest: .erdtree.toml }
+          ansible.builtin.copy:
+            src: "../templates/erdtree/.erdtree.toml"
+            dest: "~/.config/erdtree/.erdtree.toml"
     - name: alacritty
       vars:
         user_home: /home/{{ansible_user_id}}
