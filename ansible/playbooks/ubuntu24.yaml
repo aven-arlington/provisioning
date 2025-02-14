@@ -178,7 +178,7 @@
               eval "$(fzf --bash)"
         - name: get latest erdtree url
           ansible.builtin.uri:
-            url: https:/api.github.com/repos/solidiquis/erdtree/releases/latest
+            url: https://api.github.com/repos/solidiquis/erdtree/releases/latest
             return_content: true
           register: erdtree_latest
         - name: install erdtree {{ erdtree_latest.json.tag_name }}
@@ -217,7 +217,7 @@
               - libxkbcommon-dev
         - name: get latest release tag from alacritty repository
           ansible.builtin.uri:
-            url: https:/api.github.com/repos/alacritty/alacritty/releases/latest
+            url: https://api.github.com/repos/alacritty/alacritty/releases/latest
             return_content: true
           register: alacritty_latest
         - name: clone alacritty {{ alacritty_latest.json.tag_name }}
@@ -267,7 +267,7 @@
             executable: /bin/bash
         - name: get latest nerd fonts release
           ansible.builtin.uri:
-            url: https:/api.github.com/repos/ryanoasis/nerd-fonts/releases/latest
+            url: https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest
             return_content: true
           register: nf_latest
         - name: install nerd fonts {{ nf_latest.json.tag_name }}
