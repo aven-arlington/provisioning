@@ -205,7 +205,7 @@
       vars:
         user_home: /home/{{ansible_user_id}}
         repo_root: "{{user_home}}/repos/third_party/alacritty"
-        font_dir: /usr/share/fonts/nerd_ubuntu_sans
+        font_dir: /usr/share/fonts/nerd_ubuntu_sans/
       block:
         - name: update apt cache
           become: true
@@ -289,7 +289,6 @@
             src: "{{ item.browser_download_url }}"
             dest: "{{ font_dir }}"
             keep_newer: true
-            include: "*.tff"
         - name: refresh font cache
           ansible.builtin.shell: fc-cache -f -v
           become: true
