@@ -314,14 +314,15 @@
             dest: "{{ font_dir }}"
             keep_newer: true
         - name: refresh font cache
-          ansible.builtin.shell: fc-cache -f -v
           become: true
-          ansible.builtin.template:
+          ansible.builtin.shell: fc-cache -f -v
+        - name: config alacritty
+          ansible.builtin.copy:
             src: "../templates/alacritty/{{item.src}}"
-            dest: "~/.config/alacritty/"
+            dest: "~/.config/{{item.dest}}"
           with_items:
-            - { src: alacritty.j2, dest: alacritty.toml }
-            - { src: tokyonight_moon.toml, dest: themes/ }
+            - { src: alacritty.toml, dest: alacritty/ }
+            - { src: tokyonight_moon.toml, dest: alacritty/themes/ }
     - name: neovim
       vars:
         repo_root: "//home/{{ansible_user_id}}/repos/third_party/neovim"
@@ -396,11 +397,11 @@
           args:
             chdir: "{{temp_loc}}"
         - name: config helix
-          ansible.builtin.template:
+          ansible.builtin.copy:
             src: "../templates/helix/{{item.src}}"
-            dest: "~/.config/helix/"
+            dest: "~/.config/{{item.dest}}"
           with_items:
-            - { src: config.toml, dest: config.toml }
-            - { src: languages.toml, dest: languages.toml }
-            - { src: tokyonight_helix.toml, dest: tokyonight_helix.toml }
+            - { src: config.toml, dest: helix/}
+            - { src: languages.toml, dest: helix/ }
+            - { src: tokyonight_helix.toml, dest: helix/theme/ }
 
