@@ -110,12 +110,12 @@
             file_type: file
             use_regex: yes
             patterns: ['^(?:[^_\n]*_)+[^_\n]*$']
-          register: file_names
+          register: key_names
         - name: keychain setup
           become: false
           ansible.builtin.shell: |
             printf '%s\n' 'eval `keychain --eval --quiet --agents ssh {{ item | basename }}`' >> ~/.bashrc
-          loop: "{{file_names.files.}}"
+          loop: "{{key_names.files if key_names.files is iterable else []}}"
           loop_control:
             label: "{{ item | basename }}"
     - name: python installation
