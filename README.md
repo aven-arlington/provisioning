@@ -14,3 +14,8 @@ Contains various Ansible playbooks and templates that automate the creation of n
 ## [Customizing the Terminal](terminal/terminal.md)
 
 Contains helpful information about customizing the terminal.
+
+
+## [Rust, Rustup, and Cargo configurations](rust/rust.md)
+
+Contains helpful information about customizing the Rust environment.

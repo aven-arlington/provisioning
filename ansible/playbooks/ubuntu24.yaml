@@ -2,6 +2,9 @@
 - name: ubuntu 24.04 setup
   hosts: ubuntu
   gather_facts: true
+  module_defaults:
+    ansible.builtin.shell:
+      executable: /bin/bash
   tasks:
     - name: core ubuntu setup
       become: true
@@ -127,6 +130,21 @@
           shell: /tmp/sh.rustup.sh -y
           tags:
             - rust
+        - name: create shell completions
+          when: cargo_exists is failed
+          become: false
+          ansible.builtin.shell: |
+            source "$HOME/.cargo/env"
+            rustup completions bash rustup >> /tmp/rustup
+            rustup completions bash cargo >> /tmp/cargo
+        - name: shell completions
+          when: cargo_exists is failed
+          become: true
+          ansible.builtin.shell: |
+            rustup completions bash rustup >> /tmp/rustup
+            rustup completions bash cargo >> /tmp/cargo
+            sudo cp /tmp/rustup /etc/bash_completion.d/rustup
+            sudo cp /tmp/cargo /etc/bash_completion.d/cargo
     - name: personalization
       block:
         - name: download official git-prompt
@@ -249,8 +267,6 @@
             source ~/.cargo/env
             cd {{repo_root}}
             cargo build --release
-          args:
-            executable: /bin/bash
         - name: install alacritty
           become: true
           ansible.builtin.shell: |
@@ -266,7 +282,6 @@
             scdoc < extra/man/alacritty.5.scd | gzip -c | tee /usr/local/share/man/man5/alacritty.5.gz > /dev/null
             scdoc < extra/man/alacritty-bindings.5.scd | gzip -c | tee /usr/local/share/man/man5/alacritty-bindings.5.gz > /dev/null
           args:
-            executable: /bin/bash
             chdir: "{{repo_root}}"
         - name: fix git refs
           ansible.builtin.shell: |
@@ -278,8 +293,6 @@
             update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/local/bin/alacritty 50
             update-alternatives --auto x-terminal-emulator
           become: true
-          args:
-            executable: /bin/bash
         - name: get latest nerd fonts release
           ansible.builtin.uri:
             url: https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest
@@ -303,8 +316,6 @@
         - name: refresh font cache
           ansible.builtin.shell: fc-cache -f -v
           become: true
-          args:
-            executable: /bin/bash
         - name: config alacritty
           ansible.builtin.template:
             src: "../templates/alacritty/{{item.src}}"
@@ -358,8 +369,6 @@
             update-alternatives --install /usr/bin/vi vi /usr/local/bin/nvim-wrapper 50
             update-alternatives --auto vi
           become: true
-          args:
-            executable: /bin/bash
     - name: helix
       vars:
         user_home: /home/{{ansible_user_id}}
@@ -389,6 +398,5 @@
             mkdir -p /usr/share/helix
             cp -r ./runtime /usr/share/helix/
           args:
-            executable: /bin/bash
             chdir: "{{temp_loc}}"
 
