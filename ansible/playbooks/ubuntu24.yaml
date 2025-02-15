@@ -27,6 +27,7 @@
               - xclip
               - gzip
               - scdoc
+              - keychain
         - name: system wide sudo configuration
           ansible.builtin.template:
             src: ../templates/sudoers.j2
@@ -92,6 +93,31 @@
             src: ../templates/yubikey_setup.j2
             dest: /home/{{ansible_user_id}}/yubikey_setup.sh
             mode: "0744"
+    - name: optional keychain setup
+      become: true
+      block:
+        - name: apt update
+          ansible.builtin.apt:
+            update_cache: true
+            upgrade: true
+        - name: install packages via apt
+          ansible.builtin.apt:
+            name:
+              - keychain
+        - name: Use a single pattern that contains a comma formatted as a list
+          ansible.builtin.find:
+            paths: ~/.ssh/
+            file_type: file
+            use_regex: yes
+            patterns: ['^(?:[^_\n]*_)+[^_\n]*$']
+          register: file_names
+        - name: keychain setup
+          become: false
+          ansible.builtin.shell: |
+            printf '%s\n' 'eval `keychain --eval --quiet --agents ssh {{ item | basename }}`' >> ~/.bashrc
+          loop: "{{file_names.files.}}"
+          loop_control:
+            label: "{{ item | basename }}"
     - name: python installation
       block:
         - name: install common python modules
