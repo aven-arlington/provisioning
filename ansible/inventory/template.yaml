@@ -1,3 +1,21 @@
-ubuntu:
+desktop:
   hosts:
     <hostname>:
+
+server:
+  hosts:
+    <hostname>:
+
+edge_iot:
+  hosts:
+    <hostname>:
+
+linux:
+  children:
+    desktop:
+    server:
+    edege_iot:
+
+windows:
+  children:
+
