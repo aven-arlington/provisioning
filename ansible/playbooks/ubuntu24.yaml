@@ -110,14 +110,14 @@
             paths: ~/.ssh/
             file_type: file
             use_regex: yes
-            patterns: ['^(?:[^_\n]*_)+[^_\n]*$']
+            patterns: ['^(?!.*(ed_ke|wn_ho))(?:[^_\n]*_)+[^_\n]*$']
           register: key_names
         - name: keychain setup
           ansible.builtin.shell: |
-            printf '%s\n' 'eval `keychain --eval --quiet --agents ssh {{ item | basename }}`' >> ~/.bashrc
+            printf '%s\n' 'eval `keychain --eval --quiet --agents ssh {{ item.path | basename }}`' >> ~/.bashrc
           loop: "{{key_names.files if key_names.files is iterable else []}}"
           loop_control:
-            label: "{{ item | basename }}"
+            label: "{{ item.path | basename }}"
     - name: python installation
       block:
         - name: install common python modules
