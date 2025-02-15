@@ -94,13 +94,14 @@
             dest: /home/{{ansible_user_id}}/yubikey_setup.sh
             mode: "0744"
     - name: optional keychain setup
-      become: true
       block:
         - name: apt update
+          become: true
           ansible.builtin.apt:
             update_cache: true
             upgrade: true
         - name: install packages via apt
+          become: true
           ansible.builtin.apt:
             name:
               - keychain
@@ -112,7 +113,6 @@
             patterns: ['^(?:[^_\n]*_)+[^_\n]*$']
           register: key_names
         - name: keychain setup
-          become: false
           ansible.builtin.shell: |
             printf '%s\n' 'eval `keychain --eval --quiet --agents ssh {{ item | basename }}`' >> ~/.bashrc
           loop: "{{key_names.files if key_names.files is iterable else []}}"
