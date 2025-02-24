@@ -413,6 +413,7 @@
             return_content: true
           register: helix_latest
         - name: download helix {{ helix_latest.json.tag_name }}
+          become: true
           loop: "{{ helix_latest.json.assets }}"
           when: "'-x86_64-linux.tar.xz' in item.name"
           ansible.builtin.unarchive:
