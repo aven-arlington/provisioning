@@ -2,13 +2,21 @@
 
 ## My Personal Custom Prompt
 
+Note the presence of `$` before the single quote expands the string, with backslash-escaped characters in string replaced as specified by the ANSI C standard. [Source](https://www.gnu.org/software/bash/manual/html_node/ANSI_002dC-Quoting.html#ANSI_002dC-Quoting)
+
 ```bash
 source ~/.git-prompt.sh
 get_now() {
     date +'%Y-%m-%d %H:%M:%S'
 }
-# Note: Breaking this up into smaller variables results in PS1 being resolved once when .bashrc is read and never again.
-PS1='\[\033]0;\h: \w\]\[\033[38;2;224;175;104m${debian_chroot:+($debian_chroot)}\]\[\033[38;2;115;218;202m\]\h\[\033[38;2;192;202;245m\]: \[\033[38;2;122;162;247m\]\w\[\033[38;2;247;118;142m\]$(__git_ps1 " (%s)")\[\033[38;2;54;59;84m\] - $(get_now)\n\[\033[38;2;192;202;245m\]>'
+PS1=$'\[\u001B]0;\h: \w\a\]\u001B[38;2;224;175;104m${debian_chroot:+($debian_chroot)}\u001B[38;2;115;218;202m\u001B[38;2;192;202;245m: \u001B[38;2;122;162;247m\w\u001B[38;2;247;118;142m$(__git_ps1 " (%s)")\u001B[38;2;54;59;84m - $(get_now)\n\u001B[38;2;192;202;245m>'
+
+# Optional for hostname colors based on hash values
+# Requires installation of host_colo_rs
+get_host(){
+    host_colo_rs $HOSTNAME
+}
+PS1=$'\[\u001B]0;\h: \w\a\]\u001B[38;2;224;175;104m${debian_chroot:+($debian_chroot)}$(get_host)\h\u001B[38;2;192;202;245m: \u001B[38;2;122;162;247m\w\u001B[38;2;247;118;142m$(__git_ps1 " (%s)")\u001B[38;2;54;59;84m - $(get_now)\n\u001B[38;2;192;202;245m>'
 ```
 
 ## Custom Prompt Quick Reference
@@ -43,7 +51,7 @@ The `\e[0m` sequence removes all attributes (formatting and colors). It can be a
 echo -e "\033[31mHello\e[0m World"
 ```
 
-Non-printing sequences, e.g. for setting the title bar text, must be surrounded with `\[` and `\]`
+Non-printing sequences, e.g. for setting the title bar text, can optionally be surrounded with `\[` and `\]`
 
 Operating System Commands (OSC) are denoted with a escape followed by a closing bracket and code, i.e. `\e]0;` which instructs the OS to set the title of the window.
 
@@ -127,58 +135,3 @@ printf "source ~/.git-prompt.sh\n" >> ~/.bashrc
 # Then add this to the PS1
 PS1='$PS1$(__git_ps1 " (%s)")'
 ```
-
-| Name             |   TN#   | Use Case                                                             |
-| :--------------- | :-----: | :------------------------------------------------------------------- |
-| carnation        | #f7768e | # This keyword, terminal red                                         |
-| peach            | #ff9e64 | # Number, bool, constants                                            |
-| necrophilic      | #e0af68 | # Function parameters and terminal Yellow                            |
-| grey_pebble      | #cfc9c2 | # Semantic highlighting                                              |
-| light_tropics    | #9ece6a | # Strings and class names                                            |
-| star_grass       | #73daca | # Objects, literals, links, terminal Green                           |
-| ice_citadel      | #b4f9f8 | # Regex literal strings                                              |
-| caribbean_blue   | #2ac3de | # Language support functions                                         |
-| bubbly_barracuda | #7dcfff | # Properties, flags, markdown headings, Terminal Cyan, import/export |
-| fennel_flower    | #7aa2f7 | # Function names terminal Blue                                       |
-| baby_purple      | #bb9af7 | # Control Keywords, symbols, operators, terminal Magenta             |
-| light_periwinkle | #c0caf5 | # Variables, class names, Terminal White                             |
-| high_style       | #a9b1d6 | # Editor Foreground                                                  |
-| bright_bluebell  | #9aa5ce | # Text                                                               |
-| midnight_sea     | #565f89 | # Comments                                                           |
-| nobility_blue    | #414868 | # Terminal Black                                                     |
-| coarse_wool      | #1a1b26 | # Editor Background (Night)                                          |
-
-
-"#f47868": "apricot"
-"#ffffff": "white"
-"#dbbfef": "lilac"
-"#a4a0e8": "lavender"
-"#5a5977": "comet"
-"#452859": "bossanova"
-"#3b224c": "midnight"
-"#cccccc": "silver"
-"#697C81": "sirocco"
-"#9ff28f": "mint"
-"#eccdba": "almond"
-"#E8DCA0": "chamois"
-"#efba5d": "honey"
-"#ffcd1c": "lightning"
-"#6F44F0": "delta"
-"#281733": "revolver"
-
-"#f47868" : "apricot",
-"#ffffff" : "white",
-"#dbbfef" : "lilac",
-"#a4a0e8" : "lavender",
-"#5a5977" : "comet",
-"#452859" : "bossanova",
-"#3b224c" : "midnight",
-"#cccccc" : "silver",
-"#697C81" : "sirocco",
-"#9ff28f" : "mint",
-"#eccdba" : "almond",
-"#E8DCA0" : "chamois",
-"#efba5d" : "honey",
-"#ffcd1c" : "lightning",
-"#6F44F0" : "delta",
-"#281733" : "revolver",
