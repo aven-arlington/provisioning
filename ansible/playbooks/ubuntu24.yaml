@@ -5,6 +5,8 @@
   module_defaults:
     ansible.builtin.shell:
       executable: /bin/bash
+  vars:
+    temp_loc: "/tmp/"
   tasks:
     - name: core ubuntu setup
       become: true
@@ -405,7 +407,6 @@
     - name: helix
       vars:
         user_home: /home/{{ansible_user_id}}/
-        temp_loc: "/tmp/"
       block:
         - name: get helix release tag
           ansible.builtin.uri:
@@ -453,12 +454,14 @@
           loop: "{{ marksman_latest.json.assets }}"
           when: "'marksman-linux-x64' in item.name"
           ansible.builtin.get_url:
-              url: "{{ item.browser_download_url }}"
-              dest: "{{temp_loc}}"
-              owner: "{{ansible_user_id }}"
-              group: "{{ansible_user_id }}"
-              mode: "0755"
-              force: true
+            url: "{{ item.browser_download_url }}"
+            dest: "{{temp_loc}}"
+            owner: "{{ansible_user_id }}"
+            group: "{{ansible_user_id }}"
+            mode: "0755"
+            force: true
+          args:
+            chdir: "{{temp_loc}}"
         - name: install marksman {{ marksman_latest.json.tag_name }}
           become: true
           ansible.builtin.shell: |
@@ -505,7 +508,6 @@
     - name: c++ development
       vars:
         user_home: /home/{{ansible_user_id}}/
-        temp_loc: "/tmp/"
       block:
       - name: update apt cache
         become: true
