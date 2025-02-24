@@ -494,16 +494,19 @@
             chmod +x ./lua-language-server
           args:
             chdir: "~/.local/bin/"
-        - name: yaml-language-server
-          ansible.builtin.shell: npm install --global yaml-language-server@next
-        - name: vscode-langservers (json, html, css, js, ts)
-          ansible.builtin.shell: npm install --global vscode-langservers-extracted
-        - name: bash-language-server
-          ansible.builtin.shell: npm install --global bash-language-server
-        - name: graphql-language-service-cli
-          ansible.builtin.shell: npm install --global graphql-language-service-cli
-        - name: toml-language-server
-          ansible.builtin.shell: npm install -g @taplo/cli
+        - name: npm block
+          become: true
+          block:
+          - name: yaml-language-server
+            ansible.builtin.shell: npm install --global yaml-language-server@next
+          - name: vscode-langservers (json, html, css, js, ts)
+            ansible.builtin.shell: npm install --global vscode-langservers-extracted
+          - name: bash-language-server
+            ansible.builtin.shell: npm install --global bash-language-server
+          - name: graphql-language-service-cli
+            ansible.builtin.shell: npm install --global graphql-language-service-cli
+          - name: toml-language-server
+            ansible.builtin.shell: npm install -g @taplo/cli
     - name: c++ development
       vars:
         user_home: /home/{{ansible_user_id}}/
