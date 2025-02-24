@@ -228,6 +228,10 @@
             src: /usr/bin/batcat
             dest: /usr/bin/bat
             state: link
+        - name: config bat
+          ansible.builtin.copy:
+            src: "../configs/bat/config"
+            dest: "~/.config/"
         - name: which fd-find
           ansible.builtin.command: which fdfind
           register: fd_find_path
@@ -436,7 +440,7 @@
             chdir: "{{temp_loc}}"
         - name: config helix
           ansible.builtin.copy:
-            src: "../templates/helix/{{item.src}}"
+            src: "../configs/helix/{{item.src}}"
             dest: "~/.config/{{item.dest}}"
           with_items:
             - { src: config.toml, dest: helix/}
