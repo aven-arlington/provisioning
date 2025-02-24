@@ -28,6 +28,7 @@
               - gzip
               - scdoc
               - keychain
+              - jq
         - name: system wide sudo configuration
           ansible.builtin.template:
             src: ../templates/sudoers.j2
@@ -52,6 +53,10 @@
             sshd_password_authentication: "no"
             sshd_client_alive_interval: 60
             sshd_client_alive_count_max: 60
+        - name: remove pre-installed ssh config
+          ansible.builtin.file:
+            path: /etc/ssh/sshd_config.d/50-cloud-init.conf
+            state: absent
         - name: remove sudo hint from bashrc
           ansible.builtin.command: sed -i -e '/sudo hint/,+11 s/^/#/' /etc/bash.bashrc
         - name: remove the legal quips from motd
@@ -149,8 +154,6 @@
             dest: /tmp/sh.rustup.sh
             mode: "0755"
             force: true
-          tags:
-            - rust
         - name: install rustup and cargo
           when: cargo_exists is failed
           shell: /tmp/sh.rustup.sh -y
@@ -257,7 +260,7 @@
             include: "erd"
         - name: config erdtree
           ansible.builtin.copy:
-            src: "../templates/erdtree/.erdtree.toml"
+            src: "../configs/erdtree/.erdtree.toml"
             dest: "~/.config/erdtree/"
     - name: alacritty
       vars:
@@ -347,7 +350,7 @@
           ansible.builtin.shell: fc-cache -f -v
         - name: config alacritty
           ansible.builtin.copy:
-            src: "../templates/alacritty/{{item.src}}"
+            src: "../configs/alacritty/{{item.src}}"
             dest: "~/.config/{{item.dest}}"
           with_items:
             - { src: alacritty.toml, dest: alacritty/ }
@@ -397,7 +400,7 @@
           become: true
     - name: helix
       vars:
-        user_home: /home/{{ansible_user_id}}
+        user_home: /home/{{ansible_user_id}}/
         temp_loc: "/tmp/"
       block:
         - name: get helix release tag
@@ -406,7 +409,6 @@
             return_content: true
           register: helix_latest
         - name: download helix {{ helix_latest.json.tag_name }}
-          become: true
           loop: "{{ helix_latest.json.assets }}"
           when: "'-x86_64-linux.tar.xz' in item.name"
           ansible.builtin.unarchive:
@@ -421,8 +423,15 @@
           become: true
           ansible.builtin.shell: |
             cp ./hx /usr/bin
-            mkdir -p /usr/share/helix
-            cp -r ./runtime /usr/share/helix/
+            mkdir -p /usr/lib/helix
+            cp -r ./runtime/ /usr/lib/helix/
+            echo "export HELIX_DEFAULT_RUNTIME=/usr/lib/helix/runtime" >> ~/.bashrc
+          args:
+            chdir: "{{temp_loc}}"
+        - name: install user runtime
+          ansible.builtin.shell: |
+            mkdir -p {{user_home}}.config/helix/
+            cp -r ./runtime/ /usr/lib/helix/
           args:
             chdir: "{{temp_loc}}"
         - name: config helix
@@ -432,5 +441,94 @@
           with_items:
             - { src: config.toml, dest: helix/}
             - { src: languages.toml, dest: helix/ }
-            - { src: tokyonight_helix.toml, dest: helix/theme/ }
-
+    - name: language servers
+      block:
+        - name: marksman markdown lsp
+          ansible.builtin.uri:
+            url: https://api.github.com/repos/artempyanykh/marksman/releases/latest
+            return_content: true
+          register: marksman_latest
+        - name: download marksman {{ marksman_latest.json.tag_name }}
+          loop: "{{ marksman_latest.json.assets }}"
+          when: "'marksman-linux-x64' in item.name"
+          ansible.builtin.get_url:
+              url: "{{ item.browser_download_url }}"
+              dest: "{{temp_loc}}"
+              owner: "{{ansible_user_id }}"
+              group: "{{ansible_user_id }}"
+              mode: "0755"
+              force: true
+        - name: install marksman {{ marksman_latest.json.tag_name }}
+          become: true
+          ansible.builtin.shell: |
+            cp {{temp_loc}}marksman-linux-x64 /usr/bin/marksman
+        - name: lua language server
+          ansible.builtin.uri:
+            url: https://api.github.com/repos/LuaLS/lua-language-server/releases/latest
+            return_content: true
+          register: lua_ls_latest
+        - name: lua_ls directory
+          become: true
+          ansible.builtin.shell: |
+            mkdir -p /usr/share/lua-language-server
+        - name: download lua_ls {{ lua_ls_latest.json.tag_name }}
+          become: true
+          loop: "{{ lua_ls_latest.json.assets }}"
+          when: "'-linux-x64.tar.gz' in item.name"
+          ansible.builtin.unarchive:
+            remote_src: true
+            src: "{{ item.browser_download_url }}"
+            dest: "/usr/share/lua-language-server/"
+            owner: "{{ansible_user_id }}"
+            group: "{{ansible_user_id }}"
+            extra_opts: ['--no-same-owner']
+        - name: lua_ls directory
+          ansible.builtin.shell: |
+            cat << EOF >> lua-language-server
+            #!/bin/bash
+            exec "/usr/share/lua-language-server/bin/lua-language-server" "$@"
+            EOF
+            chmod +x ./lua-language-server
+          args:
+            chdir: "~/.local/bin/"
+        - name: yaml-language-server
+          ansible.builtin.shell: npm install --global yaml-language-server@next
+        - name: vscode-langservers (json, html, css, js, ts)
+          ansible.builtin.shell: npm install --global vscode-langservers-extracted
+        - name: bash-language-server
+          ansible.builtin.shell: npm install --global bash-language-server
+        - name: graphql-language-service-cli
+          ansible.builtin.shell: npm install --global graphql-language-service-cli
+        - name: toml-language-server
+          ansible.builtin.shell: npm install -g @taplo/cli
+    - name: c++ development
+      vars:
+        user_home: /home/{{ansible_user_id}}/
+        temp_loc: "/tmp/"
+      block:
+      - name: update apt cache
+        become: true
+        ansible.builtin.apt:
+          update_cache: true
+      - name: install clang
+        become: true
+        ansible.builtin.apt:
+          name:
+            - clang
+            - clangd
+            - libgtest-dev
+            - clang-tidy
+            - cppcheck
+      - name: install conan package
+        ansible.builtin.pip:
+          virtualenv: "/home/{{ansible_user_id}}/.venv"
+          name:
+            - conan
+            - cmakelang
+      - name: cmake lsp neocmakelsp 
+        community.general.cargo:
+          name: neocmakelsp
+      - name: get latest llvm
+        become: true
+        ansible.builtin.shell: bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+      

@@ -2,3 +2,4 @@ suppress-size = true
 level = 3
 layout = "inverted"
 hidden = true
+no-git = true
