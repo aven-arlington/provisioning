@@ -532,6 +532,7 @@
             - cmakelang
       - name: cmake lsp neocmakelsp 
         ansible.builtin.shell: |
+          source ~/.cargo/env
           cargo install neocmakelsp
       - name: get latest llvm
         become: true
