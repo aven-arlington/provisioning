@@ -531,8 +531,8 @@
             - conan
             - cmakelang
       - name: cmake lsp neocmakelsp 
-        community.general.cargo:
-          name: neocmakelsp
+        ansible.builtin.shell: |
+          cargo install neocmakelsp
       - name: get latest llvm
         become: true
         ansible.builtin.shell: bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
