@@ -12,4 +12,7 @@
 
     # with verbose option
     ansible-playbook ./playbooks/ubuntu24.yaml --ask-become-pass -v(v)(v) -i ./inventory
+
+    # with roles
+    ansible-playbook ./playbooks/ubuntu24_roles.yaml --ask-become-pass -i ./inventory
     ```

@@ -4,18 +4,12 @@
   gather_facts: true
   roles:
     - generic
-  module_defaults:
-    ansible.builtin.shell:
-      executable: /bin/bash
-  vars:
-    temp_loc: "/tmp/"
   tasks:
     - name: core ubuntu setup
       become: true
       block:
         - name: apt update and upgrade
           ansible.builtin.apt:
-            update_cache: true
             upgrade: true
         - name: install packages via apt
           ansible.builtin.apt:
