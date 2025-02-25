@@ -231,7 +231,7 @@
         - name: install bat 
           become: true
           ansible.builtin.shell: |
-            sudo dpkg -i {{ bat_pkg }}
+            sudo dpkg -i {{ bat_pkg.dest }}
           args:
             chdir: "{{temp_loc}}"
         - name: config bat
