@@ -222,23 +222,16 @@
             name:
             - ripgrep
             - fd-find
-        - name: get bat release info
-          ansible.builtin.uri:
-            url: https://api.github.com/repos/sharkdp/bat/releases/latest
-            return_content: true
-          register: bat_latest
-        - name: download bat{{ bat_latest.json.tag_name }}
-          loop: "{{ bat_latest.json.assets }}"
-          when: "'_amd64.deb' in item.name"
+        - name: bat - latest release
           ansible.builtin.get_url:
-            url: "{{ item.browser_download_url }}"
+            url: "{{ lookup('url', 'https://api.github.com/repos/sharkdp/bat/releases/latest', split_lines=false) | regex_search('browser_download_url.*(https://(.*?)_amd64.deb)', '\\1') | first }}"
             dest: "{{temp_loc}}"
             mode: "0755"
           register: bat_pkg
-        - name: install bat {{ bat_latest.json.tag_name }}
+        - name: install bat 
           become: true
           ansible.builtin.shell: |
-            sudo dpkg -i {{ item.name }}
+            sudo dpkg -i {{ bat_pkg }}
           args:
             chdir: "{{temp_loc}}"
         - name: config bat
