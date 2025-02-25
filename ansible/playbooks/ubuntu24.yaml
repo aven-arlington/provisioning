@@ -220,20 +220,8 @@
           become: true
           ansible.builtin.apt:
             name:
-            - bat
             - ripgrep
             - fd-find
-            - fzf
-        - name: create batcat symlink
-          become: true
-          ansible.builtin.file:
-            src: /usr/bin/batcat
-            dest: /usr/bin/bat
-            state: link
-        - name: config bat
-          ansible.builtin.copy:
-            src: "../configs/bat/config"
-            dest: "~/.config/bat/"
         - name: get bat release tag
           ansible.builtin.uri:
             url: https://api.github.com/repos/sharkdp/bat/releases/latest
@@ -253,6 +241,24 @@
             sudo dpkg -i {{ bat_pkg }}
           args:
             chdir: "{{temp_loc}}"
+        - name: config bat
+          ansible.builtin.copy:
+            src: "../configs/bat/config"
+            dest: "~/.config/bat/"
+        - name: get fzf release tag
+          ansible.builtin.uri:
+            url: https://api.github.com/repos/junegunn/fzf/releases/latest
+            return_content: true
+          register: zfz_latest
+        - name: download fzf {{ zfz_latest.json.tag_name }}
+          become: true
+          loop: "{{ zfz_latest.json.assets }}"
+          when: "'-linux_amd64.tar.gz' in item.name"
+          ansible.builtin.unarchive:
+            remote_src: true
+            src: "{{ item.browser_download_url }}"
+            dest: "/usr/bin/"
+            extra_opts: ['--no-same-owner']
         - name: which fd-find
           ansible.builtin.command: which fdfind
           register: fd_find_path
