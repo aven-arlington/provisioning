@@ -222,7 +222,7 @@
             name:
             - ripgrep
             - fd-find
-        - name: get bat release tag
+        - name: get bat release info
           ansible.builtin.uri:
             url: https://api.github.com/repos/sharkdp/bat/releases/latest
             return_content: true
@@ -238,7 +238,7 @@
         - name: install bat {{ bat_latest.json.tag_name }}
           become: true
           ansible.builtin.shell: |
-            sudo dpkg -i {{ bat_pkg }}
+            sudo dpkg -i {{ item.name }}
           args:
             chdir: "{{temp_loc}}"
         - name: config bat
