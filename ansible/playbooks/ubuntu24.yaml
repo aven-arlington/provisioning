@@ -233,7 +233,26 @@
         - name: config bat
           ansible.builtin.copy:
             src: "../configs/bat/config"
-            dest: "~/.config/"
+            dest: "~/.config/bat/"
+        - name: get bat release tag
+          ansible.builtin.uri:
+            url: https://api.github.com/repos/sharkdp/bat/releases/latest
+            return_content: true
+          register: bat_latest
+        - name: download bat{{ bat_latest.json.tag_name }}
+          loop: "{{ bat_latest.json.assets }}"
+          when: "'_amd64.deb' in item.name"
+          ansible.builtin.get_url:
+            url: "{{ item.browser_download_url }}"
+            dest: "{{temp_loc}}"
+            mode: "0755"
+          register: bat_pkg
+        - name: install bat {{ bat_latest.json.tag_name }}
+          become: true
+          ansible.builtin.shell: |
+            sudo dpkg -i {{ bat_pkg }}
+          args:
+            chdir: "{{temp_loc}}"
         - name: which fd-find
           ansible.builtin.command: which fdfind
           register: fd_find_path
