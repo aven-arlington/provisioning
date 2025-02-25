@@ -238,18 +238,10 @@
           ansible.builtin.copy:
             src: "../configs/bat/config"
             dest: "~/.config/bat/"
-        - name: get fzf release tag
-          ansible.builtin.uri:
-            url: https://api.github.com/repos/junegunn/fzf/releases/latest
-            return_content: true
-          register: zfz_latest
-        - name: download fzf {{ zfz_latest.json.tag_name }}
-          become: true
-          loop: "{{ zfz_latest.json.assets }}"
-          when: "'-linux_amd64.tar.gz' in item.name"
+        - name: fzf - latest release
           ansible.builtin.unarchive:
             remote_src: true
-            src: "{{ item.browser_download_url }}"
+            src: "{{ lookup('url', 'https://api.github.com/repos/junegunn/fzf/releases/latest', split_lines=false) | regex_search('browser_download_url.*(https://(.*?)-linux_amd64.tar.gz)', '\\1') | first }}"
             dest: "/usr/bin/"
             extra_opts: ['--no-same-owner']
         - name: which fd-find
