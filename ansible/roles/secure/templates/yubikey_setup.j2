@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# Yubiko Keys
+printf "\n%s\n" "Insert PRIMARY Yubico key..."
+read -p "and press enter to continue"
+pamu2fcfg | tee -a ~/.config/u2f_keys
+
+printf "\n%s\n" "Insert BACKUP Yubico key..."
+read -p "and press enter to continue"
+pamu2fcfg -n | tee -a ~/.config/u2f_keys
+
+printf "\n"
+
+printf "\n%s\n" "Escalation is required to enable Yubikey for sudo"
+sudo -s current_user=$(whoami) <<'END_OF_SUDO'
+    # Enable Yubikey for sudo
+    mkdir -p /etc/yubico
+    mv /home/${current_user}/.config/u2f_keys /etc/yubico/
+    pushd /etc/pam.d
+    echo 'auth required pam_u2f.so authfile=/etc/yubico/u2f_keys cue' > common-u2f
+    for f in \$(grep -l "@include common-auth" *); do
+      if [[ "\$f" == *"~" ]]; then continue; fi
+      if grep -q "@include common-u2f" \$f; then continue; fi
+      printf "%s\n" "Updating \$f"
+      mv \$f \$f~
+      awk '/@include common-auth/ {print;print "@include common-u2f";next}1' \$f~ > \$f
+    done
+    popd
+END_OF_SUDO
+
+sudo -k

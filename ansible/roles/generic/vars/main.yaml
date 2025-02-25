@@ -1,0 +1,6 @@
+---
+# Vars for generic role
+# Generally not meant to be overridden by tasks.
+become: true
+executable: /bin/bash
+temp_loc: "/tmp/"

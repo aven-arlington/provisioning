@@ -1,0 +1,12 @@
+galaxy_info:
+  author: Aven Arlington
+  description: My personal touches for my workstations
+  role_name: personalization
+  min_ansible_version: "2.1"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+#dependencies:
+#  []

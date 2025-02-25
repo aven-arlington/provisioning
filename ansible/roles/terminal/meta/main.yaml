@@ -1,0 +1,12 @@
+galaxy_info:
+  author: Aven Arlington
+  description: Installation of my favorite terminal
+  role_name: terminal
+  min_ansible_version: "2.1"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+#dependencies:
+#  []

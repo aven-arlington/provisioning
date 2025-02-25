@@ -1,0 +1,12 @@
+galaxy_info:
+  author: Aven Arlington
+  description: Handy replacements for common utilities such as grep, tree, and more.
+  role_name: utilities
+  min_ansible_version: "2.1"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+#dependencies:
+#  []

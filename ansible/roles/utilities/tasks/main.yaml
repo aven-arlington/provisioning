@@ -1,0 +1,59 @@
+---
+# Tasks for the utilities role.
+- name: install packages via apt
+  become: true
+  ansible.builtin.apt:
+    name:
+      - ripgrep
+      - fd-find
+- name: which fd-find
+  ansible.builtin.command: which fdfind
+  register: fd_find_path
+- name: create fd-find symlink
+  become: true
+  ansible.builtin.file:
+    src: "{{ fd_find_path.stdout }}"
+    dest: /usr/bin/fd
+    state: link
+- name: bat
+  block:
+  - name: get latest release
+    ansible.builtin.get_url:
+      url: "{{ lookup('url', 'https://api.github.com/repos/sharkdp/bat/releases/latest', split_lines=false) | regex_search('browser_download_url.*(https://(.*?)_amd64.deb)', '\\1') | first }}"
+      dest: "{{temp_loc}}"
+      mode: "0755"
+    register: bat_pkg
+  - name: install {{ bat_pkg.dest }}
+    become: true
+    ansible.builtin.shell: |
+      sudo dpkg -i {{ bat_pkg.dest }}
+  - name: config bat
+    ansible.builtin.copy:
+      src: "../configs/bat/config"
+      dest: "~/.config/bat/"
+- name: fzf - latest release
+  ansible.builtin.unarchive:
+    remote_src: true
+    src: "{{ lookup('url', 'https://api.github.com/repos/junegunn/fzf/releases/latest', split_lines=false) | regex_search('browser_download_url.*(https://(.*?)-linux_amd64.tar.gz)', '\\1') | first }}"
+    dest: "/usr/bin/"
+    extra_opts: ["--no-same-owner"]
+- name: update .bashrc
+  ansible.builtin.blockinfile:
+    path: ~/.bashrc
+    append_newline: true
+    prepend_newline: true
+    marker: "# {mark} ROLE: UTILITIES"
+    block: |
+      eval "$(fzf --bash)"
+- name: install erdtree 
+  become: true
+  ansible.builtin.unarchive:
+    remote_src: true
+    src: "{{ lookup('url', 'https://api.github.com/repos/solidiquis/erdtree/releases/latest', split_lines=false) | regex_search('browser_download_url.*(https://(.*?)-x86_64-unknown-linux-gnu.tar.gz)', '\\1') | first }}"
+    dest: "/usr/bin/"
+    include: "erd"
+    extra_opts: ["--no-same-owner"]
+- name: config erdtree
+  ansible.builtin.copy:
+    src: "../configs/erdtree/.erdtree.toml"
+    dest: "~/.config/erdtree/"

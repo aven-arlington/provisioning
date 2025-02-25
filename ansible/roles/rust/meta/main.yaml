@@ -1,0 +1,12 @@
+galaxy_info:
+  author: Aven Arlington
+  description: Tools specific to Rust development
+  role_name: rust
+  min_ansible_version: "2.1"
+  platforms:
+    - name: Ubuntu
+      versions:
+        - jammy
+        - noble
+#dependencies:
+#  []

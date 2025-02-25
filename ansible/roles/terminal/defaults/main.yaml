@@ -1,0 +1,6 @@
+---
+# defaults for generic role
+# Generally meant to be overridden by tasks as needed.
+temp_loc: "/tmp/"
+chdir: "{{temp_loc}}"
+ansible.builtin.shell.args.chdir: "{{temp_loc}}"

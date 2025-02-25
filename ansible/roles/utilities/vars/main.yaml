@@ -1,0 +1,5 @@
+---
+# Vars for generic role
+# Generally not meant to be overridden by tasks.
+ansible.builtin.shell:
+      executable: /bin/bash
