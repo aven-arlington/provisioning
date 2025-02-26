@@ -1,7 +1,6 @@
 ---
 # Vars for generic role
 # Generally not meant to be overridden by tasks.
-update_cache: true
-become: true
+ansible.builtin.apt.update_cache: true
 executable: /bin/bash
 temp_loc: "/tmp/"
