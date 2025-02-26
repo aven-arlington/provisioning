@@ -1,7 +1,7 @@
 ---
 # Tasks for security prerequisites
 - name: security
-  when: "'secure' not in {{ ansible_local }}"
+  when: "'secure' not in ansible_local"
   become: true
   block:
     - name: add yubico ppa
