@@ -1,7 +1,7 @@
 ---
 # Tasks file for generic role
 - name: elevated privileges
-  ansible.builtin.become: true
+  become: true
   block:
   - name: apt update and upgrade
     ansible.builtin.apt:
