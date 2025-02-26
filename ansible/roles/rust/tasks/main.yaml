@@ -9,7 +9,7 @@
         dest: "{{ temp_loc }}/"
         mode: "0755"
     - name: install rustup and cargo
-      shell: "{{ temp_loc }}/sh.rustup.sh -y"
+      ansible.builtin.shell: "rustup-init.sh -y"
     - name: create shell completions
       ansible.builtin.shell: |
         source "$HOME/.cargo/env"
