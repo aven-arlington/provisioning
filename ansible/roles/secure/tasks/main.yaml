@@ -4,21 +4,21 @@
   when: "'secure' in {{ ansible_local }}"
   become: true
   block:
-  - name: add yubico ppa
-    ansible.builtin.apt_repository:
-      repo: ppa:yubico/stable
-  - name: install packages via apt
-    ansible.builtin.apt:
-      name:
-        - libpam-u2f
-        - yubikey-manager
-  - name: yubikey setup script template
-    become: false
-    ansible.builtin.template:
-      src: ../templates/yubikey_setup.j2
-      dest: "{{udir}}/yubikey_setup.sh"
-      mode: "0744"
-  - name: mark complete
-    ansible.builtin.file:
-    path: /etc/ansible/facts.d/secure.fact
-    state: touch
+    - name: add yubico ppa
+      ansible.builtin.apt_repository:
+        repo: ppa:yubico/stable
+    - name: install packages via apt
+      ansible.builtin.apt:
+        name:
+          - libpam-u2f
+          - yubikey-manager
+    - name: yubikey setup script template
+      become: false
+      ansible.builtin.template:
+        src: ../templates/yubikey_setup.j2
+        dest: "{{udir}}/yubikey_setup.sh"
+        mode: "0744"
+    - name: mark complete
+      ansible.builtin.file:
+        path: /etc/ansible/facts.d/secure.fact
+        state: touch
