@@ -1,0 +1,81 @@
+---
+# Tasks for the utilities role.
+- name: developer
+  when: "'developer' not in ansible_local"
+  become: true
+  block:
+    - name: helix
+      block:
+        - name: download
+          ansible.builtin.unarchive:
+            remote_src: true
+            src: "{{ lookup('url', 'https://api.github.com/repos/helix-editor/helix/releases/latest', split_lines=false) | regex_search('browser_download_url.*(https://(.*?)-x86_64-linux.tar.xz)', '\\1') | first }}"
+            dest: "{{temp_loc}}"
+            extra_opts:
+              ["--strip-components=1", "--show-stored-names", "--no-same-owner"]
+        - name: install
+          ansible.builtin.shell: |
+            cp ./hx /usr/bin/
+            cp -r ./runtime/ /usr/bin/
+        - name: install user runtime
+          become: false
+          ansible.builtin.shell: |
+            mkdir -p {{udir}}.config/helix/
+            cp -r ./runtime/ {{udir}}.config/helix/
+        - name: config
+          become: false
+          ansible.builtin.copy:
+            src: "../configs/helix/{{item.src}}"
+            dest: "~/.config/{{item.dest}}"
+          with_items:
+            - { src: config.toml, dest: helix/ }
+            - { src: languages.toml, dest: helix/ }
+    - name: language servers
+      block:
+        - name: download marksman
+          ansible.builtin.get_url:
+            url: "{{ lookup('url', 'https://api.github.com/repos/artempyanykh/marksman/releases/latest', split_lines=false) | regex_search('browser_download_url.*(https://(.*?)marksman-linux-x64)', '\\1') | first }}"
+            dest: "{{temp_loc}}"
+            mode: "0755"
+        - name: install marksman
+          ansible.builtin.shell: |
+            cp {{temp_loc}}marksman-linux-x64 /usr/bin/marksman
+        - name: lua_ls directory
+          ansible.builtin.shell: |
+            mkdir -p /usr/share/lua-language-server
+        - name: download lua_ls
+          ansible.builtin.unarchive:
+            remote_src: true
+            src: "{{ lookup('url', 'https://api.github.com/repos/LuaLS/lua-language-server/releases/latest', split_lines=false) | regex_search('browser_download_url.*(https://(.*?)-linux-x64.tar.gz)', '\\1') | first }}"
+            dest: "/usr/share/lua-language-server/"
+            extra_opts: ["--no-same-owner"]
+        - name: lua_ls directory
+          become: false
+          ansible.builtin.shell: |
+            cat << EOF >> lua-language-server
+            #!/bin/bash
+            exec "/usr/share/lua-language-server/bin/lua-language-server" "$@"
+            EOF
+            chmod +x ./lua-language-server
+          args:
+            chdir: "~/.local/bin/"
+        - name: install npm
+          ansible.builtin.apt:
+            name:
+              - npm
+        - name: npm language servers
+          block:
+            - name: yaml-language-server
+              ansible.builtin.shell: npm install --global yaml-language-server@next
+            - name: vscode-langservers (json, html, css, js, ts)
+              ansible.builtin.shell: npm install --global vscode-langservers-extracted
+            - name: bash-language-server
+              ansible.builtin.shell: npm install --global bash-language-server
+            - name: graphql-language-service-cli
+              ansible.builtin.shell: npm install --global graphql-language-service-cli
+            - name: toml-language-server
+              ansible.builtin.shell: npm install -g @taplo/cli
+    - name: mark complete
+      ansible.builtin.file:
+        path: "{{hfloc}}/{{role_name}}.fact"
+        state: touch

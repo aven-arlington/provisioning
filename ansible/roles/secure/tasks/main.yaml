@@ -20,5 +20,5 @@
         mode: "0744"
     - name: mark complete
       ansible.builtin.file:
-        path: /etc/ansible/facts.d/secure.fact
+        path: "{{hfloc}}/{{role_name}}.fact"
         state: touch

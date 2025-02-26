@@ -1,7 +1,0 @@
----
-# Defaults for generic role
-udir: "{{ lookup('ansible.builtin.env', 'HOME') }}"
-ansible.builtin.apt.update_cache: true
-executable: /bin/bash
-temp_loc: "/tmp/"
-

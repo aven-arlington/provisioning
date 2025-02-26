@@ -1,36 +1,43 @@
 ---
 # Personalization
-- name: download official git-prompt
-  ansible.builtin.get_url:
-    url: https://raw.githubusercontent.com/git/git/refs/heads/master/contrib/completion/git-prompt.sh
-    dest: ~/.config/
-    mode: "0664"
-- name: update .bashrc
-  ansible.builtin.blockinfile:
-    path: ~/.bashrc
-    append_newline: true
-    prepend_newline: true
-    marker: "# {mark} ROLE: PERSONALIZATION"
-    block: |
-      source .venv/bin/activate
-      source ~/.config/git-prompt.sh
-      get_now() {
-          date +'%Y-%m-%d %H:%M:%S'
-      }
-      PS1='\[\033]0;\h: \w\]\[\033[38;2;224;175;104m${debian_chroot:+($debian_chroot)}\]\[\033[38;2;115;218;202m\]\h\[\033[38;2;192;202;245m\]: \[\033[38;2;122;162;247m\]\w\[\033[38;2;247;118;142m\]$(__git_ps1 " (%s)")\[\033[38;2;54;59;84m\] - $(get_now)\n\[\033[38;2;192;202;245m\]>'
-      cd ~/repos
-- name: create generic folder structure
-  ansible.builtin.file:
-    path: ~/{{ item }}
-    state: directory
-    mode: 0751
-  loop:
-    - repos
-    - repos/public_gh
-    - repos/private_gh
-    - repos/projects
-    - repos/sandboxes
-    - repos/sandboxes/rust
-    - repos/sandboxes/cpp
-    - repos/sandboxes/leetcode
-    - repos/third_party
+- name: personalization
+  when: "'personalization' not in ansible_local"
+  block:
+    - name: download official git-prompt
+      ansible.builtin.get_url:
+        url: https://raw.githubusercontent.com/git/git/refs/heads/master/contrib/completion/git-prompt.sh
+        dest: ~/.config/
+        mode: "0664"
+    - name: update .bashrc
+      ansible.builtin.blockinfile:
+        path: ~/.bashrc
+        append_newline: true
+        prepend_newline: true
+        marker: "# {mark} ROLE: PERSONALIZATION"
+        block: |
+          source .venv/bin/activate
+          source ~/.config/git-prompt.sh
+          get_now() {
+              date +'%Y-%m-%d %H:%M:%S'
+          }
+          PS1='\[\033]0;\h: \w\]\[\033[38;2;224;175;104m${debian_chroot:+($debian_chroot)}\]\[\033[38;2;115;218;202m\]\h\[\033[38;2;192;202;245m\]: \[\033[38;2;122;162;247m\]\w\[\033[38;2;247;118;142m\]$(__git_ps1 " (%s)")\[\033[38;2;54;59;84m\] - $(get_now)\n\[\033[38;2;192;202;245m\]>'
+          cd ~/repos
+    - name: create generic folder structure
+      ansible.builtin.file:
+        path: ~/{{ item }}
+        state: directory
+        mode: 0751
+      loop:
+        - repos
+        - repos/public_gh
+        - repos/private_gh
+        - repos/projects
+        - repos/sandboxes
+        - repos/sandboxes/rust
+        - repos/sandboxes/cpp
+        - repos/sandboxes/leetcode
+        - repos/third_party
+    - name: mark complete
+      ansible.builtin.file:
+        path: "{{hfloc}}/{{role_name}}.fact"
+        state: touch

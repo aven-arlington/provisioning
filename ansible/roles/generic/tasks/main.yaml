@@ -111,5 +111,5 @@
             mode: 0755
         - name: mark complete
           ansible.builtin.file:
-            path: /etc/ansible/facts.d/generic.fact
+            path: "{{hfloc}}/{{role_name}}.fact"
             state: touch

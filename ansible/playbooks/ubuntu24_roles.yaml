@@ -7,6 +7,10 @@
   roles:
     - generic
     - secure
+    - rust
+    - personalization
+    - utilities
+    - terminal
   tasks:
     - name: Print user dir
       ansible.builtin.debug:
@@ -19,4 +23,3 @@
     #- name: Print all available facts
     #  ansible.builtin.debug:
     #    var: ansible_facts
-    

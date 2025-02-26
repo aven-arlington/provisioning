@@ -1,8 +1,0 @@
----
-# Vars for generic role
-# Generally not meant to be overridden by tasks.
-ansible.builtin.shell:
-      executable: /bin/bash
-user_home: /home/{{ansible_user_id}}
-repo_root: "{{user_home}}/repos/third_party/alacritty"
-font_dir: /usr/share/fonts/nerd_ubuntu_sans/

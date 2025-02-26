@@ -1,7 +1,11 @@
 ---
-# defaults for generic role
+# defaults
 # Generally meant to be overridden by tasks as needed.
 udir: "{{ lookup('ansible.builtin.env', 'HOME') }}"
+hfloc: /etc/ansible/facts.d
 ansible.builtin.apt.update_cache: true
 executable: /bin/bash
-temp_loc: "/tmp/"
+temp_loc: "/tmp"
+chdir: "/tmp"
+#chdir: "{{temp_loc}}"
+#ansible.builtin.shell.args.chdir: "{{temp_loc}}"

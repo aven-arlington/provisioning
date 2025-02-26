@@ -1,0 +1,32 @@
+---
+# Tasks for the utilities role.
+- name: cpp
+  when: "'cpp' not in ansible_local"
+  become: true
+  block:
+    - name: install clang
+      ansible.builtin.apt:
+        name:
+          - clang
+          - clangd
+          - libgtest-dev
+          - clang-tidy
+          - cppcheck
+    - name: install conan package
+      become: false
+      ansible.builtin.pip:
+        virtualenv: "/home/{{ansible_user_id}}/.venv"
+        name:
+          - conan
+          - cmakelang
+    - name: cmake lsp neocmakelsp
+      become: false
+      ansible.builtin.shell: |
+        source ~/.cargo/env
+        cargo install neocmakelsp
+    - name: get latest llvm
+      ansible.builtin.shell: bash -c "$(wget -O - https://apt.llvm.org/llvm.sh)"
+    - name: mark complete
+      ansible.builtin.file:
+        path: "{{hfloc}}/{{role_name}}.fact"
+        state: touch
