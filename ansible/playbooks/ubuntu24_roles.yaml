@@ -8,6 +8,14 @@
     - generic
     - secure
   tasks:
+    - name: Display paths of all .txt files in dir
+      ansible.builtin.debug: msg={{ lookup('ansible.builtin.fileglob', '{{udir}}/.config/ansible/*') }}
     - name: Print user dir
       ansible.builtin.debug:
         var: udir
+    - name: Print all available facts
+      ansible.builtin.debug:
+        var: ansible_facts
+    - name: Print user facts
+      ansible.builtin.debug:
+        var: ansible_local

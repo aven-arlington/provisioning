@@ -8,5 +8,5 @@ galaxy_info:
       versions:
         - jammy
         - noble
-#dependencies:
-#  []
+dependencies:
+  - role: generic
