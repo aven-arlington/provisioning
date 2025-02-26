@@ -11,6 +11,8 @@
     - personalization
     - utilities
     - terminal
+    - developer
+    - cpp
   tasks:
     - name: Print user dir
       ansible.builtin.debug:
