@@ -6,10 +6,8 @@
     udir: "{{ ansible_facts['user_dir'] }}"
   roles:
     - generic
+    - secure
   tasks:
-    - name: Print all available facts
-      ansible.builtin.debug:
-        var: ansible_facts
     - name: Print user dir
       ansible.builtin.debug:
         var: udir

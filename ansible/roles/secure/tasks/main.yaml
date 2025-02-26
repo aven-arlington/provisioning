@@ -3,9 +3,6 @@
 - name: add yubico ppa
   ansible.builtin.apt_repository:
     repo: ppa:yubico/stable
-- name: update apt cache
-  ansible.builtin.apt:
-    update_cache: true
 - name: install packages via apt
   ansible.builtin.apt:
     name:
@@ -15,5 +12,5 @@
   become: false
   ansible.builtin.template:
     src: ../templates/yubikey_setup.j2
-    dest: /home/{{ansible_user_id}}/yubikey_setup.sh
+    dest: "{{udir}}/yubikey_setup.sh"
     mode: "0744"
