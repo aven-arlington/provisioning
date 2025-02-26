@@ -1,7 +1,7 @@
 ---
 # Tasks file for generic role
 - name: generic
-  when: "'generic' in {{ ansible_local }}"
+  when: "'generic' not in {{ ansible_local }}"
   block:
     - name: elevated privileges
       become: true
