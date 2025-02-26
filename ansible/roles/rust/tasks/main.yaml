@@ -3,13 +3,10 @@
 - name: rust
   when: "'rust' not in ansible_local"
   block:
-    - name: download rust installer
-      ansible.builtin.get_url:
-        url: https://sh.rustup.rs
-        dest: "{{ temp_loc }}/"
-        mode: "0755"
     - name: install rustup and cargo
-      ansible.builtin.shell: "rustup-init.sh -y"
+      ansible.builtin.command: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
+      args:
+        chdir: "/tmp"
     - name: create shell completions
       ansible.builtin.shell: |
         source "$HOME/.cargo/env"
