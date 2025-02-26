@@ -15,4 +15,7 @@
 
     # with roles
     ansible-playbook ./playbooks/ubuntu24_roles.yaml --ask-become-pass -i ./inventory
+
+    # check syntax
+    ansible-playbook ./playbooks/ubuntu24_roles.yaml  --check
     ```

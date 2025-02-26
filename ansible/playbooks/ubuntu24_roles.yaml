@@ -4,6 +4,11 @@
   gather_facts: true
   vars:
     udir: "{{ ansible_facts['user_dir'] }}"
+    hfloc: /etc/ansible/facts.d
+    ansible.builtin.apt.update_cache: true
+    executable: /bin/bash
+    temp_loc: "/tmp"
+    chdir: "/tmp"
   roles:
     - generic
     - secure
