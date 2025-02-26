@@ -4,9 +4,7 @@
   when: "'rust' not in ansible_local"
   block:
     - name: install rustup and cargo
-      ansible.builtin.command: curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y
-      args:
-        chdir: "/tmp"
+      ansible.builtin.command: "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
     - name: create shell completions
       ansible.builtin.shell: |
         source "$HOME/.cargo/env"
