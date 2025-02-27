@@ -62,7 +62,7 @@
             chdir: "{{repo_root}}"
         - name: set default terminal
           ansible.builtin.shell: |
-            update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/local/bin/alacritty 50
+            update-alternatives --install /usr/bin/x-terminal-emulator x-terminal-emulator /usr/bin/alacritty 50
             update-alternatives --auto x-terminal-emulator
         - name: create font directory
           ansible.builtin.file:
