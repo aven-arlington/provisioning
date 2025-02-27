@@ -15,7 +15,7 @@
         prepend_newline: true
         marker: "# {mark} ROLE: PERSONALIZATION"
         block: |
-          source .venv/bin/activate
+          source ~/.venv/bin/activate
           source ~/.config/git-prompt.sh
           get_now() {
               date +'%Y-%m-%d %H:%M:%S'
