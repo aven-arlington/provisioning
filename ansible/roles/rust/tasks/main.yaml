@@ -3,24 +3,30 @@
 - name: rust
   when: "'rust' not in ansible_local"
   block:
-    - name: install rustup and cargo
-      ansible.builtin.command: "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y"
+    - name: download install script
+      ansible.builtin.get_url:
+        url: https://sh.rustup.rs
+        dest: /tmp/rustup.sh
+        mode: "0755"
+    - name: install cargo
+      ansible.builtin.shell: |
+        ./rustup.sh  -y
     - name: create shell completions
       ansible.builtin.shell: |
-        source "$HOME/.cargo/env"
+        source "{{udir}}/.cargo/env"
         rustup completions bash rustup >> {{ temp_loc }}/rustup
         rustup completions bash cargo >> {{ temp_loc }}/cargo
     - name: install rust-analyzer
       ansible.builtin.shell: |
-        source "$HOME/.cargo/env"
+        source {{udir}}/.cargo/env
         rustup component add rust-analyzer
     - name: elevated steps
       become: true
       block:
         - name: shell completions
           ansible.builtin.shell: |
-            sudo cp {{ temp_loc }}/rustup /etc/bash_completion.d/rustup
-            sudo cp {{ temp_loc }}/cargo /etc/bash_completion.d/cargo
+            cp {{ temp_loc }}/rustup /etc/bash_completion.d/rustup
+            cp {{ temp_loc }}/cargo /etc/bash_completion.d/cargo
         - name: mark complete
           ansible.builtin.file:
             path: "{{hfloc}}/{{role_name}}.fact"

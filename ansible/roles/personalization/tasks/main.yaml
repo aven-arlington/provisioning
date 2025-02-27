@@ -38,6 +38,7 @@
         - repos/sandboxes/leetcode
         - repos/third_party
     - name: mark complete
+      become: true
       ansible.builtin.file:
         path: "{{hfloc}}/{{role_name}}.fact"
         state: touch

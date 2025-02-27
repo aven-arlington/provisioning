@@ -20,8 +20,8 @@
         - name: install user runtime
           become: false
           ansible.builtin.shell: |
-            mkdir -p {{udir}}.config/helix/
-            cp -r ./runtime/ {{udir}}.config/helix/
+            mkdir -p ~/.config/helix/
+            cp -r ./runtime/ ~/.config/helix/
         - name: config
           become: false
           ansible.builtin.copy:
@@ -35,11 +35,11 @@
         - name: download marksman
           ansible.builtin.get_url:
             url: "{{ lookup('url', 'https://api.github.com/repos/artempyanykh/marksman/releases/latest', split_lines=false) | regex_search('browser_download_url.*(https://(.*?)marksman-linux-x64)', '\\1') | first }}"
-            dest: "{{temp_loc}}"
+            dest: "{{temp_loc}}/"
             mode: "0755"
         - name: install marksman
           ansible.builtin.shell: |
-            cp {{temp_loc}}marksman-linux-x64 /usr/bin/marksman
+            cp {{temp_loc}}/marksman-linux-x64 /usr/bin/marksman
         - name: lua_ls directory
           ansible.builtin.shell: |
             mkdir -p /usr/share/lua-language-server
