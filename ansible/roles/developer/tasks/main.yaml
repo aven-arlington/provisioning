@@ -30,6 +30,9 @@
           with_items:
             - { src: config.toml, dest: helix/ }
             - { src: languages.toml, dest: helix/ }
+        - name: evnironment
+          ansible.builtin.shell: |
+            echo "export HELIX_DEFAULT_RUNTIME=/usr/lib/helix/runtime" >> ~/.bashrc
     - name: language servers
       block:
         - name: download marksman

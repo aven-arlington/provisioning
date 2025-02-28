@@ -61,3 +61,6 @@ theme = "tokyonight"
 [editor.smart-tab]
 "enable" = true # Def true
 "supersede-menu" = false # Def false
+
+[editor.file-picker]
+hidden = false # Def true

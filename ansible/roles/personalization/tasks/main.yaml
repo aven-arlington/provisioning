@@ -3,25 +3,26 @@
 - name: personalization
   when: "'personalization' not in ansible_local"
   block:
+    - name: download host_colo_rs
+      ansible.builtin.unarchive:
+        remote_src: true
+        src: "{{ lookup('url', 'https://api.github.com/aven-arlington/host_colo_rs/releases/latest', split_lines=false) | regex_search('browser_download_url.*(https://(.*?)x86_64_linux_gnu.tar.gz )', '\\1') | first }}"
+        dest: ~/.local/bin/
+        extra_opts:
+          ["--strip-components=1", "--no-same-owner"]
     - name: download official git-prompt
       ansible.builtin.get_url:
         url: https://raw.githubusercontent.com/git/git/refs/heads/master/contrib/completion/git-prompt.sh
         dest: ~/.config/
         mode: "0664"
-    - name: update .bashrc
+    - name: update .bash_aliases
       ansible.builtin.blockinfile:
-        path: ~/.bashrc
-        append_newline: true
-        prepend_newline: true
-        marker: "# {mark} ROLE: PERSONALIZATION"
-        block: |
-          source ~/.config/git-prompt.sh
-          get_now() {
-              date +'%Y-%m-%d %H:%M:%S'
-          }
-          PS1='\[\033]0;\h: \w\]\[\033[38;2;224;175;104m${debian_chroot:+($debian_chroot)}\]\[\033[38;2;115;218;202m\]\h\[\033[38;2;192;202;245m\]: \[\033[38;2;122;162;247m\]\w\[\033[38;2;247;118;142m\]$(__git_ps1 " (%s)")\[\033[38;2;54;59;84m\] - $(get_now)\n\[\033[38;2;192;202;245m\]>'
-          source ~/.venv/bin/activate
-          cd ~/repos
+        path: ~/.bash_aliases
+        marker: "# {mark} BEGIN BLOCK {{ item }}"
+        block: "{{ lookup('template', item) }}"
+      loop:
+        - custom_prompt.j2
+        - aliases.j2
     - name: create generic folder structure
       ansible.builtin.file:
         path: ~/{{ item }}
