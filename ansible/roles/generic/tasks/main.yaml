@@ -64,14 +64,14 @@
       block:
         - name: create XDG folders
           ansible.builtin.file:
-            path: ~/{{ item.path }}
+            path: "{{ item.path }}"
             state: directory
             mode: "{{ item.mode }}"
           loop:
-            - { path: .config, mode: 0700 }
-            - { path: .local, mode: 0700 }
-            - { path: .local/bin, mode: 0700 }
-            - { path: .local/share, mode: 0700 }
+            - { path: ~/.config, mode: 0o0700 }
+            - { path: ~/.local, mode: 0o0700 }
+            - { path: ~/.local/bin, mode: 0o0700 }
+            - { path: ~/.local/share, mode: 0o0700 }
         - name: bash aliases
           ansible.builtin.template:
             src: ../templates/.bash_aliases.j2
@@ -103,7 +103,7 @@
         - name: keychain environment
           ansible.builtin.blockinfile:
             path: ~/.bash_aliases
-            marker: "# {mark} BEGIN BLOCK keychain"
+            marker: "# {mark} BLOCK keychain"
             block: |
               eval ssh-agent &>/dev/null
               eval `keychain --eval --quiet --agents ssh {{ item.path | basename }}`
