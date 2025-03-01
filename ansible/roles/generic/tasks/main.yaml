@@ -98,7 +98,7 @@
             paths: ~/.ssh/
             file_type: file
             use_regex: yes
-            patterns: ['^(?!.*(ed_ke|wn_ho))(?:[^_\n]*_)+[^_\n]*$']
+            patterns: ['^(?!.*(ed_ke|wn_ho))(?:[^_.*]*_)+[^_.*]*$']
           register: key_names
         - name: keychain environment
           ansible.builtin.blockinfile:
