@@ -5,6 +5,7 @@
 # END BLOCK aliases.j2
 
 # BEGIN BLOCK keychain
+eval $(keychain --eval --quiet --agents ssh {% for item in key_names %}{{item}} {% endfor %})
 # END BLOCK keychain
 
 # BEGIN BLOCK environment.j2

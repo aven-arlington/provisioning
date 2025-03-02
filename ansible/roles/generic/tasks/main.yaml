@@ -103,15 +103,14 @@
             use_regex: yes
             patterns: ['^(?!.*(ed_ke|wn_ho))(?:[^_.*]*_)+[^_.*]*$']
           register: key_names
-        - name: keychain environment
-          ansible.builtin.blockinfile:
-            path: ~/.bash_aliases
-            marker: "# {mark} BLOCK keychain"
-            block: |
-              eval $(keychain --eval --quiet --agents ssh {{ item.path | basename }})
-          loop: "{{key_names.files if key_names.files is iterable else []}}"
-          loop_control:
-            label: "{{ item.path | basename }}"
+        - name: list found files
+          ansible.builtin.debug:
+            var: key_names
+        - name: bash aliases
+          ansible.builtin.template:
+            src: ../templates/.bash_aliases.j2
+            dest: ~/.bash_aliases
+            mode: "0644"
     - name: setup installation registry
       become: true
       block:
