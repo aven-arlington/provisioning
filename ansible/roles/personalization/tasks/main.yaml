@@ -23,6 +23,7 @@
       loop:
         - custom_prompt.j2
         - aliases.j2
+        - environment.j2
     - name: create generic folder structure
       ansible.builtin.file:
         path: ~/{{ item }}

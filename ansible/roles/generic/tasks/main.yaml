@@ -72,11 +72,6 @@
             - { path: ~/.local, mode: 0o0700 }
             - { path: ~/.local/bin, mode: 0o0700 }
             - { path: ~/.local/share, mode: 0o0700 }
-        - name: bash aliases
-          ansible.builtin.template:
-            src: ../templates/.bash_aliases.j2
-            dest: ~/.bash_aliases
-            mode: "0644"
         - name: install common python modules
           ansible.builtin.pip:
             virtualenv_command: "{{ discovered_interpreter_python }} -m venv"
