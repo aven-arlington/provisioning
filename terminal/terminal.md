@@ -9,14 +9,13 @@ source ~/.git-prompt.sh
 get_now() {
     date +'%Y-%m-%d %H:%M:%S'
 }
-PS1=$'\[\u001B]0;\h: \w\a\]\u001B[38;2;224;175;104m${debian_chroot:+($debian_chroot)}\u001B[38;2;115;218;202m\u001B[38;2;192;202;245m: \u001B[38;2;122;162;247m\w\u001B[38;2;247;118;142m$(__git_ps1 " (%s)")\u001B[38;2;54;59;84m - $(get_now)\n\u001B[38;2;192;202;245m>'
+PS1=$'\[\u001B]0;\h: \w\a\]\[\u001B[38;2;224;175;104m${debian_chroot:+($debian_chroot)}\]\[\u001B[38;2;115;218;202m\h\]\[\u001B[38;2;192;202;245m: \]\[\u001B[38;2;122;162;247m\w\]\[\u001B[38;2;247;118;142m$(__git_ps1 " (%s)")\]\[\u001B[38;2;54;59;84m - $(get_now)\n\]\[\u001B[38;2;192;202;245m>\]'
 
 # Optional for hostname colors based on hash values
 # Requires installation of host_colo_rs
-get_host(){
-    host_colo_rs $HOSTNAME
-}
-PS1=$'\[\u001B]0;\h: \w\a\]\u001B[38;2;224;175;104m${debian_chroot:+($debian_chroot)}$(get_host)\h\u001B[38;2;192;202;245m: \u001B[38;2;122;162;247m\w\u001B[38;2;247;118;142m$(__git_ps1 " (%s)")\u001B[38;2;54;59;84m - $(get_now)\n\u001B[38;2;192;202;245m>'
+export HOSTCOLOR=$(host_colo_rs)
+PS1=$'\[\u001B]0;\h: \w\a\]\[\u001B[38;2;224;175;104m${debian_chroot:+($debian_chroot)}\]\[$HOSTCOLOR\]\[\u001B[38;2;192;202;245m: \]\[\u001B[38;2;122;162;247m\w\]\[\u001B[38;2;247;118;142m$(__git_ps1 " (%s)")\]\[\u001B[38;2;54;59;84m - $(get_now)\n\]\[\u001B[38;2;192;202;245m>\]'
+
 ```
 
 ## Custom Prompt Quick Reference
